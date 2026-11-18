@@ -6,6 +6,8 @@ Schulprojekt im Fach Wirtschaftsinformatik – Außenhandel, BS:WI Hamburg.
 **Live-Demo:** über GitHub Pages (Link in der Projektbeschreibung rechts).
 
 ## Funktionen
+- Messenger-Design im Stil bekannter Chat-Apps, lockerer Du-Ton
+- Automatische Spracherkennung: Deutsch, Englisch, Französisch, Spanisch, Niederländisch
 - Sendungsverfolgung mit Prüfung von Bestellnummer + E-Mail (Datenschutz)
 - Versandkosten und Lieferzeiten je Land
 - Zollauskunft: EU-Binnenmarkt vs. Nicht-EU

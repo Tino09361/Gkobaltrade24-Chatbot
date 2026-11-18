@@ -3,112 +3,175 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>GlobalTrade24 – KI-Kundenservice (Demo)</title>
+<title>GlobalTrade24 – Service-Chat (Demo)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#12304f; --navy-2:#1f4e79; --accent:#f2a33a; --bg:#eef2f6; --card:#ffffff;
-    --ink:#1b2430; --muted:#6b7684; --line:#dde3ea; --bot:#f3f6fa; --user:#1f4e79;
+    --bar:#0F5E54; --bar-2:#0B4A42; --send:#148A6F; --out:#DCF5D0; --in:#FFFFFF;
+    --wall:#E9E3D8; --ink:#14201E; --muted:#667570; --tick:#3B9EDB; --line:#D6D0C4;
+    --page:#D5DDD9; --warn:#B45309;
   }
   *{box-sizing:border-box}
   html,body{margin:0;height:100%}
-  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
-  header{background:var(--navy);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:14px}
-  .logo{width:38px;height:38px;border-radius:10px;background:var(--accent);display:grid;place-items:center;font-weight:700;color:var(--navy)}
-  header h1{font-size:17px;margin:0;font-weight:600}
-  header p{margin:2px 0 0;font-size:12.5px;opacity:.75}
-  .badge{margin-left:auto;font-size:11.5px;background:rgba(255,255,255,.12);padding:5px 10px;border-radius:20px;white-space:nowrap}
-  main{flex:1;display:grid;grid-template-columns:1fr 300px;gap:18px;padding:18px;max-width:1180px;width:100%;margin:0 auto;min-height:0}
-  .chat{background:var(--card);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;flex-direction:column;min-height:0}
-  .chat-head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:13.5px}
-  .dot{width:9px;height:9px;border-radius:50%;background:#2fb36b}
-  .chat-head .mode{margin-left:auto;color:var(--muted);font-size:12px}
-  #log{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
-  .msg{max-width:78%;padding:10px 14px;border-radius:14px;line-height:1.5;font-size:14.5px;white-space:pre-wrap;word-wrap:break-word}
-  .bot{background:var(--bot);align-self:flex-start;border-bottom-left-radius:4px}
-  .user{background:var(--user);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
-  .sys{align-self:center;font-size:12px;color:var(--muted);background:#fff7ea;border:1px solid #f6dcb0;padding:6px 12px;border-radius:20px;max-width:90%;text-align:center}
-  .handoff{align-self:stretch;background:#fff4e5;border:1px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:13.5px}
-  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 10px}
-  .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--navy-2);font-family:inherit}
-  .chip:hover{border-color:var(--navy-2)}
-  form{display:flex;gap:10px;padding:12px 18px;border-top:1px solid var(--line)}
-  input[type=text]{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:14.5px;font-family:inherit;outline:none}
-  input[type=text]:focus{border-color:var(--navy-2)}
-  button.send{background:var(--navy-2);color:#fff;border:0;border-radius:10px;padding:0 18px;font-weight:600;cursor:pointer;font-family:inherit}
-  button.send:disabled{opacity:.5;cursor:default}
-  aside{display:flex;flex-direction:column;gap:14px;overflow-y:auto;min-height:0}
-  .panel{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px}
-  .panel h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--navy-2)}
-  .panel table{width:100%;border-collapse:collapse;font-size:12px}
-  .panel td{padding:4px 0;border-bottom:1px solid var(--line);vertical-align:top}
-  .panel td:first-child{font-weight:600;padding-right:8px;white-space:nowrap}
-  .panel ul{margin:0;padding-left:18px;line-height:1.6}
-  .typing{display:inline-flex;gap:4px}
-  .typing span{width:6px;height:6px;border-radius:50%;background:#9aa6b4;animation:b 1s infinite}
+  body{font-family:"Nunito Sans",system-ui,sans-serif;font-size:15.5px;line-height:1.42;color:var(--ink);background:var(--page);
+       display:flex;justify-content:center;align-items:stretch;gap:28px;padding:24px}
+  :focus-visible{outline:3px solid #F3C318;outline-offset:2px}
+
+  /* Telefon-Rahmen auf großen Bildschirmen */
+  .phone{width:440px;max-width:100%;display:flex;flex-direction:column;background:var(--wall);border-radius:22px;overflow:hidden;
+         box-shadow:0 18px 50px rgba(15,94,84,.25),0 0 0 8px #1D2B28;min-height:0;height:calc(100vh - 48px);max-height:900px}
+
+  /* Kopfleiste */
+  .bar{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bar);color:#fff}
+  .back{width:22px;height:22px;opacity:.9}
+  .pic{width:40px;height:40px;border-radius:50%;flex:none;background:#fff;display:grid;place-items:center}
+  .who{line-height:1.2;min-width:0}
+  .who b{display:block;font-size:16.5px;font-weight:700}
+  .who span{font-size:13px;opacity:.85}
+  .bar .icons{margin-left:auto;display:flex;gap:18px;opacity:.9}
+  .bar .icons svg{width:20px;height:20px}
+
+  /* Verlauf mit Muster */
+  #log{flex:1;overflow-y:auto;padding:14px 12px 8px;display:flex;flex-direction:column;gap:4px;scroll-behavior:smooth;
+       background-color:var(--wall);
+       background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg fill='none' stroke='%23CFC7B8' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='10' y='14' width='22' height='16' rx='2'/%3E%3Cpath d='M10 20h22M21 14v6'/%3E%3Cpath d='M78 12l10 6-10 6-3-6z'/%3E%3Ccircle cx='96' cy='78' r='9'/%3E%3Cpath d='M87 78h18M96 69c3 3 3 15 0 18M96 69c-3 3-3 15 0 18'/%3E%3Cpath d='M20 80h22l-4 8H24z'/%3E%3Cpath d='M28 80v-8h6v8'/%3E%3Cpath d='M58 52l6 4 6-4M58 52v8l6 4 6-4v-8l-6-4z'/%3E%3C/g%3E%3C/svg%3E")}
+  #log>*{flex-shrink:0}
+  .day{align-self:center;background:#fff;color:var(--muted);font-size:12.5px;padding:4px 12px;border-radius:8px;margin:2px 0 8px;box-shadow:0 1px .5px rgba(0,0,0,.08)}
+  .notice{align-self:center;max-width:88%;text-align:center;background:#FDF3C5;color:#5B4A12;font-size:12.5px;padding:7px 12px;border-radius:8px;margin-bottom:10px;box-shadow:0 1px .5px rgba(0,0,0,.08)}
+  .row{display:flex;max-width:82%;margin-top:4px}
+  .row.me{align-self:flex-end}
+  .bubble{position:relative;padding:6px 9px 7px 10px;border-radius:9px;box-shadow:0 1px .5px rgba(0,0,0,.13);white-space:pre-wrap;word-wrap:break-word}
+  .bot .bubble{background:var(--in);border-top-left-radius:0}
+  .me .bubble{background:var(--out);border-top-right-radius:0}
+  .bot .bubble::before,.me .bubble::before{content:"";position:absolute;top:0;width:10px;height:12px}
+  .bot .bubble::before{left:-8px;background:linear-gradient(225deg,var(--in) 50%,transparent 50%)}
+  .me .bubble::before{right:-8px;background:linear-gradient(135deg,var(--out) 50%,transparent 50%)}
+  .meta{float:right;margin:6px 0 -4px 10px;font-size:11.5px;color:var(--muted);display:inline-flex;align-items:center;gap:3px;line-height:1}
+  .meta svg{width:16px;height:11px}
+  .typing{display:inline-flex;gap:4px;padding:5px 2px}
+  .typing span{width:7px;height:7px;border-radius:50%;background:#9AA7A2;animation:blink 1s infinite}
   .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
-  @keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
-  .reset{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted);width:100%}
-  @media (max-width:860px){main{grid-template-columns:1fr}aside{order:2}.chat{min-height:70vh}.badge{display:none}}
+  @keyframes blink{0%,80%,100%{opacity:.3}40%{opacity:1}}
+
+  /* Sendungskarte als Nachricht */
+  .shipment{align-self:flex-start;width:82%;margin-top:4px;background:#fff;border-radius:9px;border-top-left-radius:0;overflow:hidden;box-shadow:0 1px .5px rgba(0,0,0,.13)}
+  .shipment .top{display:flex;justify-content:space-between;gap:10px;padding:9px 12px;background:#E7F3EF;font-size:13px;color:var(--muted)}
+  .shipment .top strong{color:var(--ink);font-size:14.5px}
+  .route{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:12px 12px 2px}
+  .place b{display:block;font-size:24px;font-weight:700;line-height:1}
+  .place small{font-size:12.5px;color:var(--muted)}
+  .place.to{text-align:right}
+  .line{position:relative;height:2px;background:repeating-linear-gradient(90deg,var(--bar) 0 6px,transparent 6px 11px)}
+  .line::after{content:"";position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left:7px solid var(--bar)}
+  .steps{list-style:none;margin:8px 0 0;padding:0 12px 10px;display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+  .steps li{font-size:12px;color:var(--muted);border-top:4px solid #E3E0D8;padding-top:5px}
+  .steps li.done{border-color:var(--send);color:var(--ink)}
+  .steps li.now{border-color:#F3C318;color:var(--ink);font-weight:700}
+  .steps li.warn{border-color:var(--warn);color:var(--warn);font-weight:700}
+  .facts{display:grid;grid-template-columns:1fr 1fr;margin:0;border-top:1px solid #EEE9E0}
+  .facts div{padding:7px 12px;font-size:13px}
+  .facts div:nth-child(even){border-left:1px solid #EEE9E0}
+  .facts div:nth-child(n+3){border-top:1px solid #EEE9E0}
+  .facts dt{color:var(--muted);font-size:11.5px}
+  .facts dd{margin:0;font-weight:600}
+  .shipment .flag{padding:8px 12px;background:#FDF3C5;font-size:13px}
+
+  .handoff{align-self:center;max-width:88%;text-align:center;background:#fff;border:1px solid #F0C98B;color:#6B3E07;font-size:13px;padding:8px 12px;border-radius:8px;margin:8px 0}
+  .handoff b{display:block}
+
+  /* Schnellantworten + Eingabe */
+  .chips{display:flex;gap:6px;padding:8px 10px 4px;overflow-x:auto;scrollbar-width:none;background:var(--wall)}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;border:1px solid #BFD9CF;background:#fff;color:var(--bar);border-radius:999px;padding:6px 12px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer}
+  .chip:hover{background:#EEF7F3}
+  form{display:flex;align-items:center;gap:8px;padding:8px 10px 12px;background:var(--wall)}
+  .field{flex:1;display:flex;align-items:center;gap:8px;background:#fff;border-radius:24px;padding:0 14px;box-shadow:0 1px .5px rgba(0,0,0,.13);min-width:0}
+  .field svg{width:22px;height:22px;flex:none;color:#8A9692}
+  input[type=text]{flex:1;min-width:0;border:0;outline:none;padding:12px 0;font:inherit;font-size:16px;background:transparent}
+  .send{width:48px;height:48px;flex:none;border-radius:50%;border:0;background:var(--send);color:#fff;display:grid;place-items:center;cursor:pointer}
+  .send:hover{background:var(--bar)}
+  .send:disabled{opacity:.55;cursor:default}
+  .send svg{width:22px;height:22px;margin-left:3px}
+
+  /* Info-Spalte */
+  aside{width:300px;align-self:center;max-height:calc(100vh - 48px);overflow-y:auto}
+  aside h2{font-size:18px;margin:0 0 4px}
+  aside p.hint{margin:0 0 10px;color:#4B5955;font-size:14px}
+  .orders{list-style:none;margin:0 0 22px;padding:0;background:#fff;border-radius:12px;overflow:hidden}
+  .orders li+li{border-top:1px solid #EAEFEC}
+  .orders button{all:unset;box-sizing:border-box;display:grid;grid-template-columns:38px 1fr;gap:0 10px;align-items:center;width:100%;padding:10px 12px;cursor:pointer}
+  .orders button:hover{background:#F2F7F5}
+  .orders button:focus-visible{outline:3px solid #F3C318;outline-offset:-3px}
+  .cc{grid-row:span 2;width:38px;height:38px;border-radius:50%;background:#E7F3EF;color:var(--bar);font-weight:700;font-size:13px;display:grid;place-items:center}
+  .cc.nonEU{background:#FDF3C5;color:#6B5208}
+  .orders strong{font-size:14.5px}
+  .orders small{color:var(--muted);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .can{margin:0 0 18px;padding-left:18px;font-size:14px;color:#2E3B38}
+  .reset{font:inherit;font-size:14px;font-weight:600;background:#fff;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--bar);width:100%}
+  .reset:hover{background:#F2F7F5}
+  .foot{margin-top:14px;font-size:12px;color:#4B5955}
+  #mode{font-weight:600}
+
+  @media (max-width:820px){
+    body{padding:0;display:block;background:var(--wall)}
+    .phone{width:100%;height:100vh;height:100dvh;max-height:none;border-radius:0;box-shadow:none}
+    aside{width:auto;max-height:none;padding:22px 16px;background:var(--page)}
+    .row,.shipment{max-width:88%}
+  }
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;scroll-behavior:auto!important}}
 </style>
 </head>
 <body>
-<header>
-  <div class="logo">GT</div>
-  <div>
-    <h1>GlobalTrade24 – Kundenservice</h1>
-    <p>KI-Assistent · 24/7 · DE · EN · FR · ES · PL · NL</p>
+<section class="phone" aria-label="Service-Chat von GlobalTrade24">
+  <div class="bar">
+    <svg class="back" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div class="pic" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="30" height="30"><rect x="7" y="12" width="26" height="15" rx="1.5" fill="none" stroke="#0F5E54" stroke-width="2"/><path d="M13 12v15M20 12v15M27 12v15" stroke="#0F5E54" stroke-width="1.6"/><rect x="7" y="29" width="26" height="3" fill="#F3C318"/></svg>
+    </div>
+    <div class="who"><b>GlobalTrade24 Service</b><span id="presence">online</span></div>
+    <div class="icons" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke="#fff" stroke-width="2"/><path d="M16 16l4 4" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.8" fill="#fff"/><circle cx="12" cy="12" r="1.8" fill="#fff"/><circle cx="12" cy="19" r="1.8" fill="#fff"/></svg>
+    </div>
   </div>
-  <div class="badge">Schulprojekt-Demo · fiktives Unternehmen</div>
-</header>
+  <div id="log" aria-live="polite"></div>
+  <div class="chips" id="chips">
+    <button class="chip">Wo ist meine Bestellung GT24-58123?</button>
+    <button class="chip">Do I have to pay customs for France?</button>
+    <button class="chip">Salut, c'est combien la livraison en Suisse ?</button>
+    <button class="chip">¿Cuánto cuesta el envío a España?</button>
+    <button class="chip">Ik wil iets terugsturen</button>
+    <button class="chip">Kann ich mit einem Mitarbeiter reden?</button>
+  </div>
+  <form id="f">
+    <div class="field">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><path d="M8.5 14.5c1.8 2 5.2 2 7 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <label for="q" style="position:absolute;left:-9999px">Nachricht</label>
+      <input type="text" id="q" placeholder="Nachricht" autocomplete="off">
+    </div>
+    <button class="send" id="send" aria-label="Senden"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20.5l18-8.5L3 3.5l2.5 8.5z" fill="#fff"/></svg></button>
+  </form>
+</section>
 
-<main>
-  <section class="chat">
-    <div class="chat-head"><span class="dot"></span><strong>Digitaler Assistent</strong><span class="mode" id="mode">wird verbunden …</span></div>
-    <div id="log" aria-live="polite"></div>
-    <div class="chips" id="chips">
-      <button class="chip">Wo ist meine Bestellung GT24-58123?</button>
-      <button class="chip">Fallen Zollgebühren für Frankreich an?</button>
-      <button class="chip">Was kostet der Versand nach Polen?</button>
-      <button class="chip">Ich möchte etwas zurückschicken</button>
-      <button class="chip">Bonjour, quels sont les délais de livraison ?</button>
-      <button class="chip">Ich möchte mit einem Mitarbeiter sprechen</button>
-    </div>
-    <form id="f">
-      <input type="text" id="q" placeholder="Ihre Frage in jeder Sprache …" autocomplete="off">
-      <button class="send" id="send">Senden</button>
-    </form>
-  </section>
-
-  <aside>
-    <div class="panel">
-      <h3>Test-Bestellungen</h3>
-      <table>
-        <tr><td>GT24-58123</td><td>Laptop · Frankreich<br>j.martin@beispiel.fr</td></tr>
-        <tr><td>GT24-58200</td><td>Bürostuhl · Spanien<br>l.garcia@beispiel.es</td></tr>
-        <tr><td>GT24-57990</td><td>Monitor · Polen<br>a.nowak@beispiel.pl</td></tr>
-        <tr><td>GT24-58301</td><td>Drucker · Schweiz<br>m.keller@beispiel.ch</td></tr>
-        <tr><td>GT24-58044</td><td>Headset · Niederlande<br>s.devries@beispiel.nl</td></tr>
-      </table>
-    </div>
-    <div class="panel">
-      <h3>Was der Bot kann</h3>
-      <ul>
-        <li>Sendungsverfolgung (mit Prüfung Bestellnr. + E-Mail)</li>
-        <li>Versandkosten &amp; Lieferzeiten je Land</li>
-        <li>Zoll: EU vs. Nicht-EU</li>
-        <li>Retoure anlegen</li>
-        <li>Rechnung &amp; Zahlungsarten</li>
-        <li>Produktinfos &amp; Verfügbarkeit</li>
-        <li>Übergabe an Mitarbeiter</li>
-      </ul>
-    </div>
-    <div class="panel">
-      <button class="reset" id="reset">Gespräch neu starten</button>
-    </div>
-  </aside>
-</main>
+<aside>
+  <h2>Test-Bestellungen</h2>
+  <p class="hint">Antippen – der Chat fragt die Sendung ab.</p>
+  <ul class="orders" id="orders"></ul>
+  <h2>Was der Service-Bot kann</h2>
+  <ul class="can">
+    <li>Sendungen verfolgen</li>
+    <li>Versandkosten und Lieferzeiten nennen</li>
+    <li>Zollfragen klären (EU und Nicht-EU)</li>
+    <li>Retouren anlegen</li>
+    <li>Rechnungen und Zahlungsarten erklären</li>
+    <li>an das Service-Team übergeben</li>
+  </ul>
+  <p class="hint">Modus: <span id="mode">verbindet …</span><br>Erkannte Sprache: <b id="lang">–</b></p>
+  <button class="reset" id="reset">Chat neu starten</button>
+  <p class="foot">Schulprojekt Wirtschaftsinformatik, BS:WI Hamburg. GlobalTrade24 ist ein fiktives Unternehmen, alle Daten sind erfunden.</p>
+</aside>
 
 <script>
 // ---------------- Wissensbasis (fiktiv) ----------------
@@ -138,12 +201,13 @@ const KB = {
 };
 
 // ---------------- Fiktive Bestelldatenbank ----------------
+// steps: Bezeichnungen der 4 Etappen; at: aktuelle Etappe (0–3); warn: Problem an aktueller Etappe
 const ORDERS = {
-  "GT24-58123":{email:"j.martin@beispiel.fr",name:"Jean Martin",land:"FR",ort:"Lyon",artikel:"ProBook 14 Laptop (1×)",wert:"899 €",status:"Versendet – im Transit",versandt:"9. Nov. 2026",eta:"Fr., 13. Nov. 2026",dienst:"DPD",tracking:"DPD 0153 8826 4471",zahlung:"Carte Bancaire – bezahlt"},
-  "GT24-58200":{email:"l.garcia@beispiel.es",name:"Lucía García",land:"ES",ort:"Valencia",artikel:"ErgoSit Bürostuhl (2×)",wert:"498 €",status:"In Bearbeitung – wird verpackt",versandt:"–",eta:"Di., 17. – Do., 19. Nov. 2026",dienst:"GLS",tracking:"noch nicht verfügbar",zahlung:"PayPal – bezahlt"},
-  "GT24-57990":{email:"a.nowak@beispiel.pl",name:"Anna Nowak",land:"PL",ort:"Krakau",artikel:"ViewMax 27 Monitor (1×)",wert:"219 €",status:"Zugestellt",versandt:"2. Nov. 2026",eta:"Zugestellt am 5. Nov. 2026",dienst:"DHL",tracking:"DHL 3400 1189 5521",zahlung:"BLIK – bezahlt"},
-  "GT24-58301":{email:"m.keller@beispiel.ch",name:"Markus Keller",land:"CH",ort:"Zürich",artikel:"PrintJet 300 Drucker (1×)",wert:"159 €",status:"Beim Zoll – Verzollung läuft",versandt:"6. Nov. 2026",eta:"Mo., 16. Nov. 2026",dienst:"DHL Express",tracking:"DHL 7720 5534 1902",zahlung:"Kreditkarte – bezahlt",hinweis:"Nicht-EU (DAP): Einfuhrumsatzsteuer der Schweiz (8,1 %) und ggf. Bearbeitungsgebühr zahlt der Empfänger an DHL."},
-  "GT24-58044":{email:"s.devries@beispiel.nl",name:"Sanne de Vries",land:"NL",ort:"Utrecht",artikel:"SoundCall Headset (1×)",wert:"79 €",status:"Zustellung verzögert – Adressproblem",versandt:"4. Nov. 2026",eta:"unklar",dienst:"PostNL",tracking:"PostNL 3S GT24 5804 4",zahlung:"iDEAL – bezahlt",hinweis:"Paket kam zurück ins Depot (Hausnummer fehlt). Fall für Mitarbeiter."}
+  "GT24-58123":{st:"transit",etaD:["2026-11-13"],pay:"Carte Bancaire",keys:["ordered","shipped","transit","delivered"],email:"j.martin@beispiel.fr",name:"Jean Martin",land:"FR",ort:"Lyon",artikel:"ProBook 14 Laptop (1×)",wert:"899 €",status:"Versendet – im Transit",versandt:"9. Nov. 2026",eta:"Fr., 13. Nov. 2026",dienst:"DPD",tracking:"DPD 0153 8826 4471",zahlung:"Carte Bancaire – bezahlt",steps:["Bestellt","Versendet","Unterwegs","Zugestellt"],at:2},
+  "GT24-58200":{st:"processing",etaD:["2026-11-17","2026-11-19"],pay:"PayPal",keys:["ordered","packed","transit","delivered"],email:"l.garcia@beispiel.es",name:"Lucía García",land:"ES",ort:"Valencia",artikel:"ErgoSit Bürostuhl (2×)",wert:"498 €",status:"In Bearbeitung – wird verpackt",versandt:"–",eta:"Di., 17. – Do., 19. Nov. 2026",dienst:"GLS",tracking:"noch nicht verfügbar",zahlung:"PayPal – bezahlt",steps:["Bestellt","Verpackt","Unterwegs","Zugestellt"],at:1},
+  "GT24-57990":{st:"delivered",etaD:["2026-11-05"],pay:"BLIK",keys:["ordered","shipped","transit","delivered"],email:"a.nowak@beispiel.pl",name:"Anna Nowak",land:"PL",ort:"Krakau",artikel:"ViewMax 27 Monitor (1×)",wert:"219 €",status:"Zugestellt",versandt:"2. Nov. 2026",eta:"Zugestellt am 5. Nov. 2026",dienst:"DHL",tracking:"DHL 3400 1189 5521",zahlung:"BLIK – bezahlt",steps:["Bestellt","Versendet","Unterwegs","Zugestellt"],at:4},
+  "GT24-58301":{st:"customs",etaD:["2026-11-16"],pay:"Kreditkarte",hint:"chVat",keys:["ordered","shipped","customs","delivered"],email:"m.keller@beispiel.ch",name:"Markus Keller",land:"CH",ort:"Zürich",artikel:"PrintJet 300 Drucker (1×)",wert:"159 €",status:"Beim Zoll – Verzollung läuft",versandt:"6. Nov. 2026",eta:"Mo., 16. Nov. 2026",dienst:"DHL Express",tracking:"DHL 7720 5534 1902",zahlung:"Kreditkarte – bezahlt",hinweis:"Nicht-EU (DAP): Einfuhrumsatzsteuer der Schweiz (8,1 %) und ggf. Bearbeitungsgebühr zahlt der Empfänger an DHL.",steps:["Bestellt","Versendet","Verzollung","Zugestellt"],at:2},
+  "GT24-58044":{st:"problem",etaD:null,pay:"iDEAL",hint:"address",keys:["ordered","shipped","delivery","delivered"],email:"s.devries@beispiel.nl",name:"Sanne de Vries",land:"NL",ort:"Utrecht",artikel:"SoundCall Headset (1×)",wert:"79 €",status:"Zustellung verzögert – Adressproblem",versandt:"4. Nov. 2026",eta:"unklar",dienst:"PostNL",tracking:"PostNL 3S GT24 5804 4",zahlung:"iDEAL – bezahlt",hinweis:"Paket kam zurück ins Depot (Hausnummer fehlt). Fall für Mitarbeiter.",steps:["Bestellt","Versendet","Zustellung","Zugestellt"],at:2,warn:true}
 };
 
 // ---------------- Tools für die KI ----------------
@@ -156,7 +220,8 @@ const TOOLS = [
      const id=(bestellnummer||"").trim().toUpperCase(); const o=ORDERS[id];
      if(!o) return {fehler:"Bestellnummer nicht gefunden."};
      if((email||"").trim().toLowerCase()!==o.email) return {fehler:"E-Mail passt nicht zur Bestellung. Aus Datenschutzgründen keine Auskunft."};
-     verified.add(id); const {email:_,...rest}=o; return {bestellnummer:id,...rest,land_name:KB.versand[o.land].name,eu:KB.versand[o.land].eu};
+     verified.add(id); showShipment(id,o);
+     const {email:_,steps,at,warn,st,etaD,pay,hint,keys,...rest}=o; return {bestellnummer:id,...rest,land_name:KB.versand[o.land].name,eu:KB.versand[o.land].eu};
    }},
   {name:"retoure_anlegen",
    description:"Legt eine Retoure für eine bereits verifizierte Bestellung an und verschickt das Retourenlabel per E-Mail.",
@@ -182,11 +247,12 @@ const SYSTEM = `Du bist der KI-Kundenservice-Assistent der GlobalTrade24 GmbH, e
 
 REGELN
 - Antworte IMMER in der Sprache der letzten Kundennachricht (DE, EN, FR, ES, PL, NL …).
-- Freundlich, kurz (max. 4–5 Sätze), klar. Keine Markdown-Überschriften, keine Sternchen; einfache Aufzählungen mit "–" sind ok.
+- Ton wie in einem Messenger: locker, herzlich, per Du (in anderen Sprachen entsprechend informell), kurze Nachrichten (max. 3–4 Sätze), gelegentlich ein passendes Emoji. Keine Markdown-Formatierung; einfache Aufzählungen mit "–" sind ok.
 - Nutze NUR die Wissensbasis und die Tools. Erfinde keine Fakten, Preise oder Zusagen. Wenn du etwas nicht weißt: ehrlich sagen und Übergabe an Mitarbeiter anbieten.
 - Datenschutz: Bestelldaten nur nach Prüfung mit Bestellnummer UND E-Mail (Tool bestellung_abrufen). Frage aktiv nach fehlenden Angaben. Gib keine Daten anderer Kunden heraus.
+- Nach erfolgreicher Abfrage wird dem Kunden automatisch eine Sendungskarte angezeigt – fasse daher nur das Wichtigste in 1–2 Sätzen zusammen.
 - Übergib an einen Mitarbeiter (Tool an_mitarbeiter_uebergeben), wenn: Kunde es wünscht, Beschwerde/Schaden/Kulanz/Rechtsfrage, Zustellproblem, genaue Zollbeträge, verärgerter Kunde oder du unsicher bist. Danach sag dem Kunden die Ticketnummer.
-- Du bist eine KI – sag das ehrlich, wenn gefragt.
+- Du bist ein KI-Bot und gibst dich NIE als Mensch aus. Wenn gefragt, sag ehrlich, dass du ein Bot bist.
 - Biete am Ende kurz weitere Hilfe an.
 
 WISSENSBASIS
@@ -200,59 +266,241 @@ Zahlung & Rechnungen: ${KB.zahlung}
 Produkte:
 ${KB.produkte.map(p=>`- ${p.name}: ${p.preis}, ${p.lager}; ${p.info}`).join("\n")}
 Kontakt: ${KB.kontakt}
-Heute ist Mittwoch, der 11. November 2026.`;
+Heute ist der ${new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}.`;
+
+// ---------------- Sprachen (DE, EN, FR, ES, NL) ----------------
+let lang='de';
+const LANG_NAMES={de:'Deutsch',en:'Englisch',fr:'Französisch',es:'Spanisch',nl:'Niederländisch'};
+const LOCALE={de:'de-DE',en:'en-GB',fr:'fr-FR',es:'es-ES',nl:'nl-NL'};
+const WORDS={
+ de:"ich und ist mein meine meiner wo wann was wie kostet kosten nach bitte zoll versand bestellung nicht mit ein eine der die das hallo danke kann muss zurück zurückschicken für will möchte paket lieferung mitarbeiter reden sprechen rechnung zahlen geht gibt es auch schon",
+ en:"i my is where when what how much does do the and order shipping ship cost costs customs duties return refund please hello hey thanks thank can want to an for delivery parcel package pay invoice talk speak human agent someone have it",
+ fr:"je mon ma mes est où quand quel quelle quels quelles les des le la commande livraison frais douane douanes retour retourner bonjour salut merci c'est pour combien délais délai delai vous tu et colis payer facture parler conseiller veux voudrais quoi dois",
+ es:"yo mi mis es dónde donde cuándo cuando qué que el los las la pedido envío envio coste costo aduana aduanas devolución devolver hola gracias para cuánto cuanto quiero por y paquete pagar factura hablar persona agente tengo",
+ nl:"ik mijn is waar wanneer wat hoe de het een bestelling verzending verzendkosten kosten douane retour terugsturen hallo hoi dank bedankt voor hoeveel wil naar en pakket levering betalen factuur praten medewerker kan moet iets"
+};
+const WSET=Object.fromEntries(Object.entries(WORDS).map(([k,v])=>[k,new Set(v.split(' '))]));
+function detectLang(text){
+  const t=text.toLowerCase().replace(/\S+@\S+/g,' ').replace(/gt24-\d+/g,' ');
+  const sc={de:0,en:0,fr:0,es:0,nl:0};
+  for(const w of t.split(/[^a-zäöüßàâçéèêëîïôûùÿœñáíóú']+/)){ if(!w) continue; for(const l in WSET){ if(WSET[l].has(w)) sc[l]++; } }
+  if(/[ñ¿¡]/.test(t)) sc.es+=2; if(/[áíóú]/.test(t)) sc.es+=1;
+  if(/[àâçèêëîïôûœ]/.test(t)) sc.fr+=2; if(/[ßäöü]/.test(t)) sc.de+=2;
+  const max=Math.max(...Object.values(sc)); if(max===0) return lang;
+  if(sc[lang]===max) return lang;
+  return ['de','en','fr','es','nl'].find(l=>sc[l]===max);
+}
+const SHIP={DE:{c:'4,90',f:'50',d:'1–2'},FR:{c:'9,90',f:'100',d:'3–5'},ES:{c:'12,90',f:'120',d:'4–6'},PL:{c:'8,90',f:'100',d:'3–4'},NL:{c:'7,90',f:'80',d:'2–3'},CH:{c:'19,90',f:null,d:'4–7'},GB:{c:'24,90',f:null,d:'5–8'}};
+const ALIASES={DE:['deutschland','germany','allemagne','alemania','duitsland'],FR:['frankreich','france','francia','frankrijk'],ES:['spanien','spain','espagne','españa','espana','spanje'],PL:['polen','poland','pologne','polonia'],NL:['niederlande','netherlands','holland','pays-bas','países bajos','paises bajos','nederland'],CH:['schweiz','switzerland','suisse','suiza','zwitserland'],GB:['großbritannien','grossbritannien','england','uk','united kingdom','royaume-uni','reino unido','verenigd koninkrijk','vk']};
+function findCountry(t){for(const [code,al] of Object.entries(ALIASES)) for(const a of al){ if(new RegExp('(^|[^a-zäöüßáéíóúñ])'+a.replace('-','\\-')+'($|[^a-zäöüßáéíóúñ])').test(t)) return code; } return null;}
+const money=(x)=>lang==='en'?'€'+x.replace(',','.'):(lang==='nl'?'€ '+x:x+' €');
+const S={
+ de:{c:{DE:'Deutschland',FR:'Frankreich',ES:'Spanien',PL:'Polen',NL:'Niederlande',CH:'Schweiz',GB:'Großbritannien'},
+  askEmail:'Schau ich gleich nach! Schick mir noch kurz die E-Mail-Adresse, mit der du bestellt hast – damit ich weiß, dass es wirklich deine Bestellung ist. 🔒',
+  askBoth:'Klar, ich schau nach! Schick mir deine Bestellnummer (z. B. GT24-58123) und deine E-Mail-Adresse.',
+  found:(s,e,del,w)=>`Gefunden! 📦`+(del?'':` ${s}.`)+(del?` Angekommen am ${e}.`:e?` Ankommen sollte es: ${e}.`:'')+(w?' Da hakt es leider gerade – soll ich dich mit jemandem aus dem Team verbinden?':''),
+  notFound:'Hm, diese Bestellnummer finde ich nicht. Schau bitte nochmal nach – sie fängt mit GT24- an.',
+  mismatch:'Die E-Mail passt leider nicht zu dieser Bestellung. Aus Datenschutzgründen kann ich dir dazu nichts sagen. 🔒',
+  zollEU:c=>`Keine Sorge! 🙂 Lieferland ${c}: EU-Binnenmarkt, also kein Zoll. Die Mehrwertsteuer steckt schon im Preis – bei der Lieferung zahlst du nichts extra.`,
+  zollNon:c=>`Lieferland ${c}: nicht in der EU, deshalb können Zoll und Einfuhrumsatzsteuer anfallen. Die zahlst du bei der Lieferung an den Paketdienst. Wie viel genau, hängt vom Warenwert ab – soll dich jemand aus dem Team beraten?`,
+  zollGen:'Innerhalb der EU (z. B. Frankreich, Spanien, Polen, Niederlande) gibt es keinen Zoll – die Mehrwertsteuer ist schon im Preis. Nur bei Ländern außerhalb der EU, etwa der Schweiz oder Großbritannien, können Zoll und Einfuhrumsatzsteuer dazukommen. In welches Land soll geliefert werden?',
+  ship:(c,cost,free,d,non)=>`🚚 ${c}: Versand ${cost}${free?` (ab ${free} gratis)`:''}, Lieferzeit ${d} Werktage${non?' inkl. Verzollung':''}.`,
+  shipHead:'Hier die Versandkosten und Lieferzeiten:', express:'Schneller geht’s mit Express: +14,90 €, 1–2 Werktage in der EU.',
+  retoure:'Kein Problem! Du hast 30 Tage Zeit ab Lieferung. Aus der EU ist die Rücksendung kostenlos – das Retourenlabel bekommst du per E-Mail. Dein Geld ist 5–7 Werktage nach Eingang wieder da. Schick mir deine Bestellnummer und E-Mail, dann kümmere ich mich drum.',
+  zahlung:'Du kannst überall mit Kreditkarte (Visa, Mastercard) oder PayPal zahlen. Dazu je nach Land: SEPA-Lastschrift (DE), Carte Bancaire (FR), Bizum (ES), BLIK (PL) und iDEAL (NL). Deine Rechnung findest du als PDF in deinem Kundenkonto.',
+  handoff:'Klar! Ich hab deine Anfrage an unser Service-Team weitergegeben. Die melden sich Mo–Fr zwischen 8 und 18 Uhr, spätestens innerhalb von 24 Stunden.',
+  handoffCard:'An das Service-Team übergeben – Ticket', urgent:'dringend',
+  unknown:'Hm, da muss ich passen. 🙈 Ich kenn mich aus mit Bestellungen, Versand, Zoll, Rücksendungen und Zahlung. Oder schreib „Mitarbeiter“, dann übernimmt jemand aus dem Team.',
+  st:{transit:'Unterwegs',processing:'Wird gerade verpackt',delivered:'Zugestellt',customs:'Beim Zoll – Verzollung läuft',problem:'Zustellung verzögert – Problem mit der Adresse'},
+  k:{ordered:'Bestellt',packed:'Verpackt',shipped:'Versendet',transit:'Unterwegs',customs:'Verzollung',delivery:'Zustellung',delivered:'Zugestellt'},
+  L:{status:'Status',eta:'Voraussichtlich',del:'Zugestellt',item:'Artikel',pay:'Zahlung',paid:'bezahlt',none:'unklar',nonEU:'Nicht-EU'},
+  hint:{chVat:'Nicht-EU: Die Schweizer Einfuhrumsatzsteuer (8,1 %) und ggf. eine Bearbeitungsgebühr zahlt der Empfänger an DHL.',address:'Das Paket liegt wieder im Depot – die Hausnummer fehlt.'}},
+ en:{c:{DE:'Germany',FR:'France',ES:'Spain',PL:'Poland',NL:'Netherlands',CH:'Switzerland',GB:'United Kingdom'},
+  askEmail:"On it! Just send me the email address you ordered with – so I know it's really your order. 🔒",
+  askBoth:'Sure, let me check! Send me your order number (e.g. GT24-58123) and your email address.',
+  found:(s,e,del,w)=>`Found it! 📦`+(del?'':` ${s}.`)+(del?` Delivered on ${e}.`:e?` Expected delivery: ${e}.`:'')+(w?" There's a problem right now – shall I connect you with someone from our team?":''),
+  notFound:"Hmm, I can't find that order number. Please check it again – it starts with GT24-.",
+  mismatch:"Sorry, that email doesn't match this order. For data protection reasons I can't share any details. 🔒",
+  zollEU:c=>`No worries! 🙂 Destination ${c}: that's inside the EU single market, so there are no customs duties. VAT is already included in the price – you won't pay anything extra on delivery.`,
+  zollNon:c=>`Destination ${c}: outside the EU, so customs duties and import VAT may apply. You pay them to the carrier on delivery. The exact amount depends on the order value – want someone from our team to help?`,
+  zollGen:'Within the EU (e.g. France, Spain, Poland, the Netherlands) there are no customs duties – VAT is already included. Only for countries outside the EU, like Switzerland or the UK, customs duties and import VAT may apply. Which country are we shipping to?',
+  ship:(c,cost,free,d,non)=>`🚚 ${c}: shipping ${cost}${free?` (free from ${free})`:''}, delivery in ${d} working days${non?' incl. customs clearance':''}.`,
+  shipHead:'Here are our shipping costs and delivery times:', express:'Need it faster? Express: +€14.90, 1–2 working days within the EU.',
+  retoure:"No problem! You have 30 days from delivery. Returns from the EU are free – you'll get the return label by email. Your money is back 5–7 working days after we receive it. Send me your order number and email and I'll take care of it.",
+  zahlung:'You can pay by credit card (Visa, Mastercard) or PayPal everywhere. Plus, depending on your country: SEPA direct debit (DE), Carte Bancaire (FR), Bizum (ES), BLIK (PL) and iDEAL (NL). Your invoice is available as a PDF in your customer account.',
+  handoff:"Sure! I've passed your request on to our service team. They'll get back to you Mon–Fri, 8 am–6 pm, within 24 hours at the latest.",
+  handoffCard:'Passed to our service team – ticket', urgent:'urgent',
+  unknown:'Hmm, I can\'t answer that one. 🙈 I can help with orders, shipping, customs, returns and payment – or type "agent" and someone from our team will take over.',
+  st:{transit:'On its way',processing:'Being packed right now',delivered:'Delivered',customs:'At customs – clearance in progress',problem:'Delivery delayed – problem with the address'},
+  k:{ordered:'Ordered',packed:'Packed',shipped:'Shipped',transit:'In transit',customs:'Customs',delivery:'Delivery',delivered:'Delivered'},
+  L:{status:'Status',eta:'Expected',del:'Delivered',item:'Item',pay:'Payment',paid:'paid',none:'unclear',nonEU:'non-EU'},
+  hint:{chVat:'Non-EU: Swiss import VAT (8.1%) and possibly a handling fee are paid by the recipient to DHL.',address:'The parcel is back at the depot – the house number is missing.'}},
+ fr:{c:{DE:'Allemagne',FR:'France',ES:'Espagne',PL:'Pologne',NL:'Pays-Bas',CH:'Suisse',GB:'Royaume-Uni'},
+  askEmail:"Je regarde tout de suite ! Envoie-moi juste l'adresse e-mail utilisée pour la commande – pour vérifier que c'est bien la tienne. 🔒",
+  askBoth:'Bien sûr, je vérifie ! Envoie-moi ton numéro de commande (par ex. GT24-58123) et ton adresse e-mail.',
+  found:(s,e,del,w)=>`Trouvé ! 📦`+(del?'':` ${s}.`)+(del?` Livré le ${e}.`:e?` Livraison prévue : ${e}.`:'')+(w?' Il y a un souci en ce moment – je te mets en contact avec un conseiller ?':''),
+  notFound:'Hmm, je ne trouve pas ce numéro de commande. Vérifie-le encore une fois – il commence par GT24-.',
+  mismatch:"Désolé, cette adresse e-mail ne correspond pas à la commande. Pour des raisons de protection des données, je ne peux rien te dire. 🔒",
+  zollEU:c=>`Pas d'inquiétude ! 🙂 Pays de livraison ${c} : c'est dans le marché unique de l'UE, donc pas de droits de douane. La TVA est déjà incluse dans le prix – rien à payer en plus à la livraison.`,
+  zollNon:c=>`Pays de livraison ${c} : hors UE, donc des droits de douane et la TVA à l'importation peuvent s'appliquer. Tu les paies au transporteur à la livraison. Le montant exact dépend de la valeur – tu veux qu'un conseiller t'aide ?`,
+  zollGen:"Dans l'UE (France, Espagne, Pologne, Pays-Bas…) il n'y a pas de douane – la TVA est déjà incluse. Hors UE, par exemple en Suisse ou au Royaume-Uni, des droits de douane et la TVA à l'importation peuvent s'ajouter. On livre dans quel pays ?",
+  ship:(c,cost,free,d,non)=>`🚚 ${c} : livraison ${cost}${free?` (offerte dès ${free})`:''}, délai ${d} jours ouvrés${non?', dédouanement compris':''}.`,
+  shipHead:'Voici les frais et délais de livraison :', express:"Plus rapide ? Express : +14,90 €, 1 à 2 jours ouvrés dans l'UE.",
+  retoure:"Pas de souci ! Tu as 30 jours après la livraison. Les retours depuis l'UE sont gratuits – l'étiquette retour arrive par e-mail. Tu es remboursé 5 à 7 jours ouvrés après réception. Envoie-moi ton numéro de commande et ton e-mail, je m'en occupe.",
+  zahlung:'Tu peux payer partout par carte (Visa, Mastercard) ou PayPal. Selon le pays aussi : prélèvement SEPA (DE), Carte Bancaire (FR), Bizum (ES), BLIK (PL) et iDEAL (NL). Ta facture est disponible en PDF dans ton compte client.',
+  handoff:"Bien sûr ! J'ai transmis ta demande à notre équipe. Elle te répond du lundi au vendredi de 8 h à 18 h, au plus tard sous 24 heures.",
+  handoffCard:"Transmis à l'équipe service – ticket", urgent:'urgent',
+  unknown:"Hmm, là je ne sais pas. 🙈 Je peux t'aider pour les commandes, la livraison, la douane, les retours et le paiement – ou écris « conseiller » et quelqu'un de l'équipe prend le relais.",
+  st:{transit:'En route',processing:'En cours de préparation',delivered:'Livré',customs:'En douane – dédouanement en cours',problem:"Livraison retardée – problème d'adresse"},
+  k:{ordered:'Commandé',packed:'Emballé',shipped:'Expédié',transit:'En route',customs:'Douane',delivery:'Livraison',delivered:'Livré'},
+  L:{status:'Statut',eta:'Prévu',del:'Livré',item:'Article',pay:'Paiement',paid:'payé',none:'inconnu',nonEU:'hors UE'},
+  hint:{chVat:"Hors UE : la TVA suisse à l'importation (8,1 %) et d'éventuels frais de dossier sont payés par le destinataire à DHL.",address:'Le colis est revenu au dépôt – il manque le numéro de rue.'}},
+ es:{c:{DE:'Alemania',FR:'Francia',ES:'España',PL:'Polonia',NL:'Países Bajos',CH:'Suiza',GB:'Reino Unido'},
+  askEmail:'¡Lo miro ahora mismo! Mándame el e-mail con el que hiciste el pedido, para comprobar que es tuyo. 🔒',
+  askBoth:'¡Claro, lo miro! Mándame tu número de pedido (p. ej. GT24-58123) y tu e-mail.',
+  found:(s,e,del,w)=>`¡Encontrado! 📦`+(del?'':` ${s}.`)+(del?` Entregado el ${e}.`:e?` Entrega prevista: ${e}.`:'')+(w?' Ahora mismo hay un problema. ¿Te pongo en contacto con alguien del equipo?':''),
+  notFound:'Mmm, no encuentro ese número de pedido. Revísalo otra vez: empieza por GT24-.',
+  mismatch:'Lo siento, ese e-mail no coincide con el pedido. Por protección de datos no puedo darte información. 🔒',
+  zollEU:c=>`¡Tranquilo! 🙂 País de destino ${c}: está dentro del mercado único de la UE, así que no hay aranceles. El IVA ya está incluido en el precio: no pagarás nada extra al recibirlo.`,
+  zollNon:c=>`País de destino ${c}: fuera de la UE, así que pueden aplicarse aranceles e IVA de importación. Se pagan al transportista en la entrega. El importe exacto depende del valor del pedido. ¿Quieres que te ayude alguien del equipo?`,
+  zollGen:'Dentro de la UE (Francia, España, Polonia, Países Bajos…) no hay aranceles: el IVA ya está incluido. Solo fuera de la UE, como Suiza o Reino Unido, pueden aplicarse aranceles e IVA de importación. ¿A qué país lo enviamos?',
+  ship:(c,cost,free,d,non)=>`🚚 ${c}: envío ${cost}${free?` (gratis a partir de ${free})`:''}, entrega en ${d} días laborables${non?', despacho de aduanas incluido':''}.`,
+  shipHead:'Estos son los gastos y plazos de envío:', express:'¿Más rápido? Exprés: +14,90 €, 1–2 días laborables en la UE.',
+  retoure:'¡Sin problema! Tienes 30 días desde la entrega. Las devoluciones desde la UE son gratis: recibirás la etiqueta por e-mail. Te devolvemos el dinero 5–7 días laborables después de recibirlo. Mándame tu número de pedido y tu e-mail y me encargo.',
+  zahlung:'Puedes pagar en todas partes con tarjeta (Visa, Mastercard) o PayPal. Según el país también: domiciliación SEPA (DE), Carte Bancaire (FR), Bizum (ES), BLIK (PL) e iDEAL (NL). Tu factura está en PDF en tu cuenta de cliente.',
+  handoff:'¡Claro! He pasado tu consulta a nuestro equipo. Te responderán de lunes a viernes de 8 a 18 h, como mucho en 24 horas.',
+  handoffCard:'Pasado al equipo de atención – ticket', urgent:'urgente',
+  unknown:'Mmm, eso no lo sé. 🙈 Te ayudo con pedidos, envíos, aduanas, devoluciones y pagos – o escribe «agente» y alguien del equipo te atiende.',
+  st:{transit:'En camino',processing:'Preparando tu pedido',delivered:'Entregado',customs:'En aduana – despacho en curso',problem:'Entrega retrasada – problema con la dirección'},
+  k:{ordered:'Pedido',packed:'Embalado',shipped:'Enviado',transit:'En camino',customs:'Aduana',delivery:'Reparto',delivered:'Entregado'},
+  L:{status:'Estado',eta:'Previsto',del:'Entregado',item:'Artículo',pay:'Pago',paid:'pagado',none:'sin fecha',nonEU:'fuera UE'},
+  hint:{chVat:'Fuera de la UE: el IVA de importación suizo (8,1 %) y posibles gastos de gestión los paga el destinatario a DHL.',address:'El paquete ha vuelto al almacén: falta el número de la calle.'}},
+ nl:{c:{DE:'Duitsland',FR:'Frankrijk',ES:'Spanje',PL:'Polen',NL:'Nederland',CH:'Zwitserland',GB:'Verenigd Koninkrijk'},
+  askEmail:'Ik kijk het meteen na! Stuur me nog even het e-mailadres waarmee je hebt besteld – zo weet ik zeker dat het jouw bestelling is. 🔒',
+  askBoth:'Tuurlijk, ik kijk even! Stuur me je bestelnummer (bijv. GT24-58123) en je e-mailadres.',
+  found:(s,e,del,w)=>`Gevonden! 📦`+(del?'':` ${s}.`)+(del?` Bezorgd op ${e}.`:e?` Verwachte levering: ${e}.`:'')+(w?' Er is nu een probleem – zal ik je doorverbinden met iemand van ons team?':''),
+  notFound:'Hmm, dat bestelnummer kan ik niet vinden. Controleer het nog eens – het begint met GT24-.',
+  mismatch:'Sorry, dat e-mailadres hoort niet bij deze bestelling. Vanwege privacy kan ik je daar niets over vertellen. 🔒',
+  zollEU:c=>`Geen zorgen! 🙂 Bestemming ${c}: dat valt binnen de EU-interne markt, dus geen invoerrechten. De btw zit al in de prijs – bij levering betaal je niets extra.`,
+  zollNon:c=>`Bestemming ${c}: buiten de EU, dus er kunnen invoerrechten en invoer-btw bijkomen. Die betaal je bij levering aan de vervoerder. Het precieze bedrag hangt af van de waarde – zal iemand van ons team je helpen?`,
+  zollGen:'Binnen de EU (bijv. Frankrijk, Spanje, Polen, Nederland) zijn er geen invoerrechten – de btw zit al in de prijs. Alleen buiten de EU, zoals Zwitserland of het VK, kunnen invoerrechten en invoer-btw bijkomen. Naar welk land verzenden we?',
+  ship:(c,cost,free,d,non)=>`🚚 ${c}: verzending ${cost}${free?` (gratis vanaf ${free})`:''}, levertijd ${d} werkdagen${non?', inclusief inklaring':''}.`,
+  shipHead:'Dit zijn de verzendkosten en levertijden:', express:'Sneller? Express: +€ 14,90, 1–2 werkdagen binnen de EU.',
+  retoure:'Geen probleem! Je hebt 30 dagen na levering. Retourneren vanuit de EU is gratis – het retourlabel krijg je per e-mail. Je geld staat 5–7 werkdagen na ontvangst weer op je rekening. Stuur me je bestelnummer en e-mail, dan regel ik het.',
+  zahlung:'Je kunt overal betalen met creditcard (Visa, Mastercard) of PayPal. Afhankelijk van je land ook: SEPA-incasso (DE), Carte Bancaire (FR), Bizum (ES), BLIK (PL) en iDEAL (NL). Je factuur vind je als pdf in je klantaccount.',
+  handoff:'Natuurlijk! Ik heb je vraag doorgestuurd naar ons serviceteam. Ze reageren ma–vr tussen 8 en 18 uur, uiterlijk binnen 24 uur.',
+  handoffCard:'Doorgestuurd naar het serviceteam – ticket', urgent:'dringend',
+  unknown:'Hmm, dat weet ik niet. 🙈 Ik help je met bestellingen, verzending, douane, retouren en betalen – of typ "medewerker", dan neemt iemand van het team het over.',
+  st:{transit:'Onderweg',processing:'Wordt nu ingepakt',delivered:'Bezorgd',customs:'Bij de douane – inklaring loopt',problem:'Bezorging vertraagd – probleem met het adres'},
+  k:{ordered:'Besteld',packed:'Ingepakt',shipped:'Verzonden',transit:'Onderweg',customs:'Douane',delivery:'Bezorging',delivered:'Bezorgd'},
+  L:{status:'Status',eta:'Verwacht',del:'Bezorgd',item:'Artikel',pay:'Betaling',paid:'betaald',none:'onbekend',nonEU:'buiten EU'},
+  hint:{chVat:'Buiten de EU: de Zwitserse invoer-btw (8,1%) en eventuele afhandelingskosten betaalt de ontvanger aan DHL.',address:'Het pakket ligt weer in het depot – het huisnummer ontbreekt.'}}
+};
+const T=()=>S[lang];
+function fmtDate(iso){return new Date(iso+'T12:00:00').toLocaleDateString(LOCALE[lang],{weekday:'short',day:'numeric',month:'short'});}
+function etaText(o){if(!o.etaD) return ''; return o.etaD.map(fmtDate).join(' – ');}
 
 // ---------------- UI ----------------
 const log=document.getElementById('log'), q=document.getElementById('q'), sendBtn=document.getElementById('send'), modeEl=document.getElementById('mode');
-let history=[], sample=null, busy=false, aiTried=false, lastId=null;
+let history=[], sample=null, busy=false, lastId=null, noticeEl=null;
+const el=(tag,cls,text)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(text!=null)e.textContent=text;return e;};
+const now=()=>new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'});
+const scroll=()=>{log.scrollTop=log.scrollHeight;};
 
-function add(cls,text){const d=document.createElement('div');d.className='msg '+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
-function sys(text){const d=document.createElement('div');d.className='sys';d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;}
-function showHandoff(t,sum,prio){const d=document.createElement('div');d.className='handoff';d.textContent=`👤 Übergabe an Mitarbeiter · Ticket ${t} · Priorität: ${prio}\nZusammenfassung für das Service-Team: ${sum}`;d.style.whiteSpace='pre-wrap';log.appendChild(d);log.scrollTop=log.scrollHeight;}
+const TICKS='<svg viewBox="0 0 18 11" aria-label="gelesen"><path d="M1 6l3 3 6-7M7 8l1 1 6-7" fill="none" stroke="#3B9EDB" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function setText(b,text){b.textContent=text;const m=el('span','meta',now());if(b.closest('.me'))m.insertAdjacentHTML('beforeend',TICKS);b.appendChild(m);}
+function add(who,text){
+  const row=el('div','row '+(who==='me'?'me':'bot'));
+  const b=el('div','bubble'); row.appendChild(b); setText(b,text);
+  log.appendChild(row); scroll(); return b;
+}
+function noticeText(){return sample
+  ?'🤖 Du schreibst mit unserem KI-Service-Bot, nicht mit einem Menschen. Deine Angaben nutzen wir nur für deine Anfrage (DSGVO).'
+  :'🤖 Du schreibst mit unserem Service-Bot, nicht mit einem Menschen. Deine Angaben nutzen wir nur für deine Anfrage (DSGVO).';}
+
+function showShipment(id,o){
+  const t=T(), v=KB.versand[o.land];
+  const c=el('article','shipment'); c.setAttribute('aria-label','Sendung '+id);
+  const top=el('div','top'); top.appendChild(el('strong',null,'📦 '+id)); top.appendChild(el('span',null,o.dienst)); c.appendChild(top);
+  const r=el('div','route');
+  const from=el('div','place'); from.appendChild(el('b',null,'DE')); from.appendChild(el('small',null,'Hamburg'));
+  const to=el('div','place to'); to.appendChild(el('b',null,o.land)); to.appendChild(el('small',null,o.ort+(v.eu?'':' · '+t.L.nonEU)));
+  r.append(from,el('div','line'),to); c.appendChild(r);
+  const ol=el('ol','steps');
+  o.keys.forEach((k,i)=>{const li=el('li',i<o.at?'done':(i===o.at?(o.warn?'warn':'now'):''),t.k[k]); if(i===o.at) li.setAttribute('aria-current','step'); ol.appendChild(li);});
+  c.appendChild(ol);
+  const dl=el('dl','facts'); const del=o.st==='delivered';
+  [[t.L.status,t.st[o.st]],[del?t.L.del:t.L.eta,etaText(o)||t.L.none],[t.L.item,o.artikel],[t.L.pay,o.pay+' – '+t.L.paid]].forEach(([k,val])=>{const d=el('div');d.append(el('dt',null,k),el('dd',null,val));dl.appendChild(d);});
+  c.appendChild(dl);
+  if(o.hint) c.appendChild(el('div','flag',t.hint[o.hint]));
+  const m=el('div','meta',now()); m.style.margin='0 10px 6px'; c.appendChild(m);
+  log.appendChild(c); scroll();
+}
+function showHandoff(tk,sum,prio){
+  const t=T(); const d=el('div','handoff'); d.appendChild(el('b',null,`👤 ${t.handoffCard} ${tk}${prio==='hoch'?' ('+t.urgent+')':''}`));
+  d.appendChild(document.createTextNode(sum)); log.appendChild(d); scroll();
+}
 function greet(){
-  history=[];verified=new Set();log.innerHTML='';
-  sys('Hinweis: Sie chatten mit einem automatisierten Assistenten (Chatbot), nicht mit einem Menschen. Ihre Daten werden gemäß DSGVO nur zur Bearbeitung Ihrer Anfrage verwendet.');
-  const g='Guten Tag! Willkommen bei GlobalTrade24. Ich bin Ihr digitaler Assistent und helfe Ihnen rund um Bestellungen, Versand, Zoll, Retouren und Zahlungen – in Ihrer Sprache. Wie kann ich Ihnen helfen?';
+  history=[];verified=new Set();lastId=null;lang='de';log.innerHTML='';{const lg=document.getElementById('lang');if(lg)lg.textContent='–';}
+  log.appendChild(el('div','day','Heute'));
+  noticeEl=el('p','notice',noticeText()); log.appendChild(noticeEl);
+  const g='Hey! 👋 Hier ist der Service-Bot von GlobalTrade24. Ich helf dir bei Bestellungen, Versand, Zoll, Rücksendungen und Zahlung – schreib einfach auf Deutsch, English, Français, Español oder Nederlands, ich antworte in deiner Sprache. Was kann ich für dich tun?';
   add('bot',g); history.push({role:'assistant',content:g});
 }
 
-// ---------------- Fallback ohne KI (regelbasiert) ----------------
+// Test-Bestellungen in der Seitenleiste
+const ordersUl=document.getElementById('orders');
+Object.entries(ORDERS).forEach(([id,o])=>{
+  const li=el('li'); const b=el('button'); b.type='button';
+  const cc=el('span','cc'+(KB.versand[o.land].eu?'':' nonEU'),o.land);
+  b.append(cc,el('strong',null,id),el('small',null,o.artikel.replace(/ \(.*\)/,'')+' – '+o.email));
+  b.addEventListener('click',()=>ask(`Wo ist meine Bestellung ${id}? Meine E-Mail: ${o.email}`));
+  li.appendChild(b); ordersUl.appendChild(li);
+});
+
+// ---------------- Regelbasierter Modus (ohne KI) ----------------
 function fallback(text){
-  const t=text.toLowerCase();
+  const t=text.toLowerCase(), L=T();
   const id=(text.match(/GT24-\d{5}/i)||[])[0]?.toUpperCase();
   const mail=(text.match(/[\w.+-]+@[\w.-]+\.\w+/)||[])[0];
   let oid=id||null; if(id) lastId=id; if(!oid&&mail&&lastId) oid=lastId;
-  if(/mitarbeiter|mensch|agent|beschwer|conseiller|humain|human|person|reclam|skarg|medewerker/.test(t)){TOOLS[2].execute({zusammenfassung:text});return 'Ich habe Ihre Anfrage an unser Service-Team weitergeleitet. '+KB.kontakt;}
-  if(oid&&mail){const r=TOOLS[0].execute({bestellnummer:oid,email:mail});return r.fehler||`Bestellung ${oid}: ${r.status}. Artikel: ${r.artikel}. Voraussichtliche Zustellung: ${r.eta}. Sendungsnummer: ${r.tracking}.${r.hinweis?' Hinweis: '+r.hinweis:''}`;}
-  if(id) return 'Gerne prüfe ich das. Bitte nennen Sie mir zusätzlich die E-Mail-Adresse, mit der Sie bestellt haben.';
-  if(/bestell|paket|liefer.*wann|wo ist/.test(t)) return 'Gerne prüfe ich Ihre Bestellung. Bitte nennen Sie mir Bestellnummer (z. B. GT24-58123) und E-Mail-Adresse.';
-  if(/zoll|einfuhr|douane|customs|aduana|cło|cla |douan/.test(t)){for(const v of Object.values(KB.versand)) if(t.includes(v.name.toLowerCase())) return v.eu?`Nein. ${v.name} gehört wie Deutschland zur EU. Im EU-Binnenmarkt fallen keine Zollgebühren an, und die Mehrwertsteuer ist bereits im Kaufpreis enthalten – es kommen keine weiteren Kosten bei der Zustellung auf Sie zu.`:`${v.name} ist kein EU-Land. Es können Zoll und Einfuhrumsatzsteuer anfallen, die Sie bei Zustellung an den Paketdienst zahlen (Versandbedingung DAP). Die genaue Höhe hängt vom Warenwert ab – gerne verbinde ich Sie mit einem Mitarbeiter.`; return KB.zoll.split('. Genaue')[0]+'.';}
-  for(const [k,v] of Object.entries(KB.versand)) if(t.includes(v.name.toLowerCase())) return `Versand nach ${v.name}: ${v.kosten}, Lieferzeit ${v.zeit}. ${KB.express}`;
-  if(/versand|liefer|livraison|délai|delai|shipping|delivery|envío|envio|wysyłk|dostaw|verzend|lever/.test(t)) return 'Versandkosten und Lieferzeiten:\n'+Object.values(KB.versand).map(v=>`– ${v.name}: ${v.kosten}, ${v.zeit}`).join('\n');
-  if(/retour|zurück|rücksend|umtausch|return|devoluc|zwrot/.test(t)) return KB.retoure;
-  if(/zahl|rechnung|paypal|bezahl|paiement|facture|payment|invoice|pago|factura|płatno|faktur|betal/.test(t)) return KB.zahlung;
-  return 'Das kann ich im Demo-Modus leider nicht beantworten. Fragen Sie mich nach Bestellstatus, Versand, Zoll, Retouren oder Zahlung – oder schreiben Sie „Mitarbeiter“.';
+  if(/mitarbeiter|mensch|agent|beschwer|conseiller|humain|human|someone|employee|reclam|queja|medewerker|persoonlijk|persona real|hablar con/.test(t)){TOOLS[2].execute({zusammenfassung:'„'+text+'“'});return L.handoff;}
+  if(oid&&mail){const r=TOOLS[0].execute({bestellnummer:oid,email:mail});
+    if(r.fehler) return r.fehler.startsWith('Bestellnummer')?L.notFound:L.mismatch;
+    const o=ORDERS[oid]; return L.found(L.st[o.st],etaText(o).replace(/\.$/,''),o.st==='delivered',!!o.warn);}
+  if(id) return ORDERS[id]?L.askEmail:L.notFound;
+  if(/bestell|paket|wo ist|where is|my order|commande|colis|où est|pedido|paquete|dónde está|donde esta|bestelling|pakket|waar is/.test(t)) return L.askBoth;
+  const cc=findCountry(t);
+  if(/zoll|einfuhr|douane|customs|duties|aduana|arancel|invoerrecht|cło/.test(t)){ const zc=cc||(lastId&&verified.has(lastId)?ORDERS[lastId].land:null); if(zc){const cc2=zc;const v=KB.versand[cc2];return v.eu?L.zollEU(L.c[cc2]):L.zollNon(L.c[cc2]);} return L.zollGen; }
+  const shipQ=/versand|liefer|livraison|délai|delai|shipping|delivery|ship|envío|envio|entrega|plazo|verzend|levertijd|lever|kost|cost|coût|cuesta|cuánto|cuanto|combien/.test(t);
+  if(cc&&shipQ){const x=SHIP[cc];return L.ship(L.c[cc],money(x.c),x.f?money(x.f+(lang==='en'||lang==='nl'?'':'')):null,x.d,!KB.versand[cc].eu)+' '+L.express;}
+  if(shipQ) return L.shipHead+'\n'+Object.keys(SHIP).map(k=>{const x=SHIP[k];return '– '+L.ship(L.c[k],money(x.c),x.f?money(x.f):null,x.d,!KB.versand[k].eu).replace('🚚 ','');}).join('\n');
+  if(/retour|zurück|rücksend|umtausch|return|refund|devoluc|devolver|zwrot|terugstur/.test(t)) return L.retoure;
+  if(/zahl|rechnung|paypal|bezahl|paiement|payer|facture|payment|invoice|pago|pagar|factura|betal|factuur/.test(t)) return L.zahlung;
+  return L.unknown;
 }
 
 // ---------------- Senden ----------------
 async function ask(text){
   if(busy||!text.trim())return; busy=true; sendBtn.disabled=true; q.value='';
-  add('user',text); history.push({role:'user',content:text});
-  const b=add('bot',''); b.innerHTML='<span class="typing"><span></span><span></span><span></span></span>';
+  lang=detectLang(text); const lg=document.getElementById('lang'); if(lg) lg.textContent=LANG_NAMES[lang];
+  add('me',text); history.push({role:'user',content:text});
+  const presence=document.getElementById('presence'); presence.textContent='schreibt …';
+  const b=add('bot',''); b.innerHTML='<span class="typing" aria-label="Service-Bot schreibt"><span></span><span></span><span></span></span>';
   let answer='';
   if(sample){
     try{
       const msgs=[{role:'user',content:'[SYSTEMANWEISUNG – nicht dem Kunden zeigen]\n'+SYSTEM+'\n\nBestätige kurz.'},{role:'assistant',content:'Verstanden.'},...history];
-      const r=await sample(msgs,{tools:TOOLS,cache:false,onText:({text})=>{if(text&&text!=='Thinking...'){b.textContent=text;log.scrollTop=log.scrollHeight;}}});
+      const r=await sample(msgs,{tools:TOOLS,cache:false,onText:({text})=>{if(text&&text!=='Thinking...'){b.textContent=text;scroll();}}});
       answer=(r.text||'').trim();
     }catch(e){
-      if(e&&e.code==='not_granted'){sample=null;modeEl.textContent='Demo-Modus (regelbasiert)';}
-      else if(e&&e.code==='rate_limited'){answer='Gerade sind sehr viele Anfragen unterwegs – bitte versuchen Sie es in einer Minute erneut.';}
+      if(e&&e.code==='not_granted'){sample=null;modeEl.textContent='Demo-Modus';}
+      else if(e&&e.code==='rate_limited'){answer='Gerade ist hier viel los. Probier es bitte in einer Minute nochmal.';}
       if(!answer) answer=fallback(text);
     }
-  } else answer=fallback(text);
-  b.textContent=answer; history.push({role:'assistant',content:answer});
-  log.scrollTop=log.scrollHeight; busy=false; sendBtn.disabled=false; q.focus();
+  } else { await new Promise(r=>setTimeout(r,700)); answer=fallback(text); }
+  setText(b,answer); presence.textContent='online'; history.push({role:'assistant',content:answer});
+  scroll(); busy=false; sendBtn.disabled=false; q.focus();
 }
 
 document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();ask(q.value);});
@@ -260,8 +508,8 @@ document.getElementById('chips').addEventListener('click',e=>{if(e.target.classL
 document.getElementById('reset').addEventListener('click',greet);
 
 greet();
-modeEl.textContent='Demo-Modus (regelbasiert)';
-(async()=>{try{if(window.claude&&claude.use){const s=await claude.use('sample');if(s){sample=s;modeEl.textContent='KI-Modus aktiv';}}}catch(e){}})();
+modeEl.textContent='Demo-Modus';
+(async()=>{try{if(window.claude&&claude.use){const s=await claude.use('sample');if(s){sample=s;modeEl.textContent='KI aktiv';if(noticeEl)noticeEl.textContent=noticeText();}}}catch(e){}})();
 </script>
 </body>
 </html>

@@ -217,7 +217,7 @@
 
 <aside>
   <h2>Test-Bestellungen</h2>
-  <p class="hint">Antippen – der Bot fragt die Sendung ab und meldet sich nach ca. 1 Minute mit der Antwort des Spediteurs.</p>
+  <p class="hint">Antippen – der Bot fragt die Sendung ab und meldet sich kurz darauf mit der Antwort des Spediteurs.</p>
   <ul class="orders" id="orders"></ul>
   <h2>Unsere 5 Bestseller</h2>
   <p class="hint">Antippen für das Datenblatt.</p>
@@ -240,7 +240,7 @@
 // =====================================================================
 // GlobalTrade24 Service-Bot – Schulprojekt (alle Daten fiktiv)
 // =====================================================================
-const CARRIER_DELAY = (location.hash === '#schnell') ? 8000 : 60000; // Antwort des Spediteurs nach ca. 1 Minute
+const CARRIER_DELAY = 8000; // Antwort des Spediteurs nach ca. 8 Sekunden (Demo)
 const IN_CLAUDE = !!(window.claude && window.claude.use);
 
 // ---------------- Hilfen für Datum ----------------
@@ -313,7 +313,7 @@ const ORDERS={
   "GT24-58301":{email:"m.keller@beispiel.ch",name:"Markus Keller",addr:"Bahnhofstrasse 40, 8001 Zürich",land:"CH",ort:"Zürich",items:[{p:'deskdock',q:1}],pay:"Kreditkarte",ordered:isoIn(-6),etaD:[isoIn(1)],dienst:"DHL Express",tracking:"DHL 7720 5534 1902",st:"customs",hint:"chVat",keys:["ordered","shipped","customs","delivered"],at:2},
   "GT24-58044":{email:"s.devries@beispiel.nl",name:"Sanne de Vries",addr:"Oudegracht 120, 3511 AX Utrecht",land:"NL",ort:"Utrecht",items:[{p:'soundcall',q:1}],pay:"iDEAL",ordered:isoIn(-9),etaD:null,dienst:"PostNL",tracking:"PostNL 3S GT24 5804 4",st:"problem",hint:"address",keys:["ordered","shipped","delivery","delivered"],at:2,warn:true}
 };
-// Antworten der Spediteure (erfunden), kommen nach ca. 1 Minute
+// Antworten der Spediteure (erfunden), kommen nach wenigen Sekunden
 const CARRIER_UPDATE={
   "GT24-58123":{de:'Update von DPD 📍 Dein Paket ist heute Morgen im Verteilzentrum Mâcon angekommen, rund 70 km vor Lyon. Die Zustellung bleibt wie geplant – DPD schickt dir vorher noch eine SMS mit Zeitfenster.',en:'Update from DPD 📍 Your parcel arrived at the Mâcon sorting centre this morning, about 70 km from Lyon. Delivery is still on schedule – DPD will text you a time slot beforehand.',fr:"Mise à jour de DPD 📍 Ton colis est arrivé ce matin au centre de tri de Mâcon, à environ 70 km de Lyon. La livraison est toujours prévue comme annoncé – DPD t'enverra un SMS avec le créneau.",es:'Novedades de DPD 📍 Tu paquete llegó esta mañana al centro de distribución de Mâcon, a unos 70 km de Lyon. La entrega sigue según lo previsto: DPD te enviará un SMS con la franja horaria.',nl:'Update van DPD 📍 Je pakket is vanochtend aangekomen in het sorteercentrum in Mâcon, zo’n 70 km voor Lyon. De bezorging blijft zoals gepland – DPD stuurt je vooraf een sms met het tijdvak.'},
   "GT24-58200":{de:'Update aus unserem Lager 📍 Deine zwei ErgoFlex Pro sind fertig verpackt und gehen heute Nachmittag an GLS raus. Die Sendungsnummer bekommst du gleich danach per E-Mail.',en:'Update from our warehouse 📍 Your two ErgoFlex Pro chairs are packed and will be handed over to GLS this afternoon. You’ll get the tracking number by email right after.',fr:'Nouvelles de notre entrepôt 📍 Tes deux ErgoFlex Pro sont emballées et partent cet après-midi avec GLS. Tu recevras le numéro de suivi par e-mail juste après.',es:'Novedades del almacén 📍 Tus dos ErgoFlex Pro ya están embaladas y salen esta tarde con GLS. Recibirás el número de seguimiento por e-mail justo después.',nl:'Update uit ons magazijn 📍 Je twee ErgoFlex Pro-stoelen zijn ingepakt en gaan vanmiddag mee met GLS. De trackingcode krijg je meteen daarna per e-mail.'},
@@ -357,7 +357,7 @@ const S={
   found:(s,e,del,w)=>`Gefunden! 📦`+(del?'':` ${s}.`)+(del?` Angekommen am ${e}.`:e?` Ankommen sollte es: ${e}.`:'')+(w?' Da hakt es leider gerade.':''),
   notFound:'Hm, diese Bestellnummer finde ich nicht. Schau bitte nochmal nach – sie fängt mit GT24- an.',
   mismatch:'Die E-Mail passt leider nicht zu dieser Bestellung. Aus Datenschutzgründen kann ich dir dazu nichts sagen. 🔒',
-  carrierAsk:(c,w)=>w?'Ich frag direkt in unserem Lager nach, wie weit deine Bestellung ist. 📨 Ich melde mich hier, sobald ich Antwort habe – dauert meist nur eine Minute.':`Ich hab gerade bei ${c} nachgefragt, wo dein Paket genau ist. 📨 Sobald die Antwort da ist, melde ich mich hier – dauert meist nur eine Minute.`,
+  carrierAsk:(c,w)=>w?'Ich frag direkt in unserem Lager nach, wie weit deine Bestellung ist. 📨 Ich melde mich hier, sobald ich Antwort habe – dauert nur einen Moment.':`Ich hab gerade bei ${c} nachgefragt, wo dein Paket genau ist. 📨 Sobald die Antwort da ist, melde ich mich hier – dauert nur einen Moment.`,
   pending:c=>`⏳ Anfrage an ${c} gesendet – warte auf Antwort …`, replied:c=>`✅ Antwort von ${c} erhalten`, wh:'Lager Hamburg',
   zollEU:c=>`Keine Sorge! 🙂 Lieferland ${c}: EU-Binnenmarkt, also kein Zoll. Die Mehrwertsteuer steckt schon im Preis – bei der Lieferung zahlst du nichts extra.`,
   zollNon:c=>`Lieferland ${c}: nicht in der EU, deshalb können Zoll und Einfuhrumsatzsteuer anfallen. Die zahlst du bei der Lieferung an den Paketdienst. Wie viel genau, hängt vom Warenwert ab – soll dich jemand aus dem Team beraten?`,
@@ -391,7 +391,7 @@ const S={
   found:(s,e,del,w)=>`Found it! 📦`+(del?'':` ${s}.`)+(del?` Delivered on ${e}.`:e?` Expected delivery: ${e}.`:'')+(w?" Unfortunately there's a problem right now.":''),
   notFound:"Hmm, I can't find that order number. Please check it again – it starts with GT24-.",
   mismatch:"Sorry, that email doesn't match this order. For data protection reasons I can't share any details. 🔒",
-  carrierAsk:(c,w)=>w?"I'm checking with our warehouse how far along your order is. 📨 I'll get back to you here as soon as I hear back – usually takes about a minute.":`I've just asked ${c} where exactly your parcel is. 📨 I'll get back to you here as soon as they reply – usually takes about a minute.`,
+  carrierAsk:(c,w)=>w?"I'm checking with our warehouse how far along your order is. 📨 I'll get back to you here as soon as I hear back – just takes a moment.":`I've just asked ${c} where exactly your parcel is. 📨 I'll get back to you here as soon as they reply – just takes a moment.`,
   pending:c=>`⏳ Request sent to ${c} – waiting for reply …`, replied:c=>`✅ Reply received from ${c}`, wh:'our Hamburg warehouse',
   zollEU:c=>`No worries! 🙂 Destination ${c}: that's inside the EU single market, so there are no customs duties. VAT is already included in the price – you won't pay anything extra on delivery.`,
   zollNon:c=>`Destination ${c}: outside the EU, so customs duties and import VAT may apply. You pay them to the carrier on delivery. The exact amount depends on the order value – want someone from our team to help?`,
@@ -425,7 +425,7 @@ const S={
   found:(s,e,del,w)=>`Trouvé ! 📦`+(del?'':` ${s}.`)+(del?` Livré le ${e}.`:e?` Livraison prévue : ${e}.`:'')+(w?' Il y a malheureusement un souci en ce moment.':''),
   notFound:'Hmm, je ne trouve pas ce numéro de commande. Vérifie-le encore une fois – il commence par GT24-.',
   mismatch:"Désolé, cette adresse e-mail ne correspond pas à la commande. Pour des raisons de protection des données, je ne peux rien te dire. 🔒",
-  carrierAsk:(c,w)=>w?"Je vérifie directement auprès de notre entrepôt où en est ta commande. 📨 Je reviens vers toi ici dès que j'ai la réponse – ça prend en général une minute.":`Je viens de demander à ${c} où se trouve exactement ton colis. 📨 Je reviens vers toi ici dès qu'ils répondent – ça prend en général une minute.`,
+  carrierAsk:(c,w)=>w?"Je vérifie directement auprès de notre entrepôt où en est ta commande. 📨 Je reviens vers toi ici dès que j'ai la réponse – ça ne prend qu'un instant.":`Je viens de demander à ${c} où se trouve exactement ton colis. 📨 Je reviens vers toi ici dès qu'ils répondent – ça ne prend qu'un instant.`,
   pending:c=>`⏳ Demande envoyée à ${c} – en attente de réponse …`, replied:c=>`✅ Réponse reçue de ${c}`, wh:"l'entrepôt de Hambourg",
   zollEU:c=>`Pas d'inquiétude ! 🙂 Pays de livraison ${c} : c'est dans le marché unique de l'UE, donc pas de droits de douane. La TVA est déjà incluse dans le prix – rien à payer en plus à la livraison.`,
   zollNon:c=>`Pays de livraison ${c} : hors UE, donc des droits de douane et la TVA à l'importation peuvent s'appliquer. Tu les paies au transporteur à la livraison. Le montant exact dépend de la valeur – tu veux qu'un conseiller t'aide ?`,
@@ -459,7 +459,7 @@ const S={
   found:(s,e,del,w)=>`¡Encontrado! 📦`+(del?'':` ${s}.`)+(del?` Entregado el ${e}.`:e?` Entrega prevista: ${e}.`:'')+(w?' Por desgracia, ahora mismo hay un problema.':''),
   notFound:'Mmm, no encuentro ese número de pedido. Revísalo otra vez: empieza por GT24-.',
   mismatch:'Lo siento, ese e-mail no coincide con el pedido. Por protección de datos no puedo darte información. 🔒',
-  carrierAsk:(c,w)=>w?'Estoy preguntando a nuestro almacén cómo va tu pedido. 📨 Te escribo aquí en cuanto me respondan; suele tardar un minuto.':`Acabo de preguntar a ${c} dónde está exactamente tu paquete. 📨 Te escribo aquí en cuanto respondan; suele tardar un minuto.`,
+  carrierAsk:(c,w)=>w?'Estoy preguntando a nuestro almacén cómo va tu pedido. 📨 Te escribo aquí en cuanto me respondan; solo tarda un momento.':`Acabo de preguntar a ${c} dónde está exactamente tu paquete. 📨 Te escribo aquí en cuanto respondan; solo tarda un momento.`,
   pending:c=>`⏳ Consulta enviada a ${c}: esperando respuesta …`, replied:c=>`✅ Respuesta recibida de ${c}`, wh:'nuestro almacén de Hamburgo',
   zollEU:c=>`¡Tranquilo! 🙂 País de destino ${c}: está dentro del mercado único de la UE, así que no hay aranceles. El IVA ya está incluido en el precio: no pagarás nada extra al recibirlo.`,
   zollNon:c=>`País de destino ${c}: fuera de la UE, así que pueden aplicarse aranceles e IVA de importación. Se pagan al transportista en la entrega. El importe exacto depende del valor del pedido. ¿Quieres que te ayude alguien del equipo?`,
@@ -493,7 +493,7 @@ const S={
   found:(s,e,del,w)=>`Gevonden! 📦`+(del?'':` ${s}.`)+(del?` Bezorgd op ${e}.`:e?` Verwachte levering: ${e}.`:'')+(w?' Er is helaas net een probleem.':''),
   notFound:'Hmm, dat bestelnummer kan ik niet vinden. Controleer het nog eens – het begint met GT24-.',
   mismatch:'Sorry, dat e-mailadres hoort niet bij deze bestelling. Vanwege privacy kan ik je daar niets over vertellen. 🔒',
-  carrierAsk:(c,w)=>w?'Ik vraag het direct na bij ons magazijn. 📨 Ik laat het je hier weten zodra ik antwoord heb – dat duurt meestal maar een minuutje.':`Ik heb net bij ${c} nagevraagd waar je pakket precies is. 📨 Ik laat het je hier weten zodra ze antwoorden – dat duurt meestal maar een minuutje.`,
+  carrierAsk:(c,w)=>w?'Ik vraag het direct na bij ons magazijn. 📨 Ik laat het je hier weten zodra ik antwoord heb – dat duurt maar even.':`Ik heb net bij ${c} nagevraagd waar je pakket precies is. 📨 Ik laat het je hier weten zodra ze antwoorden – dat duurt maar even.`,
   pending:c=>`⏳ Vraag verstuurd naar ${c} – wacht op antwoord …`, replied:c=>`✅ Antwoord ontvangen van ${c}`, wh:'magazijn Hamburg',
   zollEU:c=>`Geen zorgen! 🙂 Bestemming ${c}: dat valt binnen de EU-interne markt, dus geen invoerrechten. De btw zit al in de prijs – bij levering betaal je niets extra.`,
   zollNon:c=>`Bestemming ${c}: buiten de EU, dus er kunnen invoerrechten en invoer-btw bijkomen. Die betaal je bij levering aan de vervoerder. Het precieze bedrag hangt af van de waarde – zal iemand van ons team je helpen?`,
@@ -537,7 +537,7 @@ REGELN
 - Ton wie im Messenger: locker, herzlich, per Du (in anderen Sprachen informell), kurze Nachrichten (max. 3–4 Sätze), gelegentlich ein Emoji. Kein Markdown.
 - Nutze NUR Wissensbasis und Tools. Erfinde keine Fakten, Preise oder Zusagen.
 - Datenschutz: Bestelldaten nur nach Prüfung mit Bestellnummer UND E-Mail (bestellung_abrufen).
-- Nach bestellung_abrufen zeigt die Seite eine Sendungskarte und fragt AUTOMATISCH beim Spediteur nach; dessen Antwort erscheint nach ca. 1 Minute von selbst im Chat. Sag dem Kunden kurz, dass du beim Spediteur nachgefragt hast und dich gleich meldest.
+- Nach bestellung_abrufen zeigt die Seite eine Sendungskarte und fragt AUTOMATISCH beim Spediteur nach; dessen Antwort erscheint nach wenigen Sekunden von selbst im Chat. Sag dem Kunden kurz, dass du beim Spediteur nachgefragt hast und dich gleich meldest.
 - Rechnung gewünscht: rechnung_erstellen (Bestellung muss vorher geprüft sein). Die Rechnung erscheint als Beleg im Chat.
 - Fragen zu einem Produkt: produkt_info aufrufen (zeigt ein Datenblatt) und die Frage konkret beantworten.
 - Angebot/Mengenpreis gewünscht: angebot_erstellen (Rabatt: ab 5 Stück 5 %, ab 10 Stück 10 %, ab 25 Stück 15 %).
@@ -675,7 +675,7 @@ const ATTR=[
 ];
 function findAttr(t){for(const [k,re] of ATTR) if(re.test(t)) return k; return null;}
 
-// ---------- Spediteur-Anfrage (Antwort nach ca. 1 Minute) ----------
+// ---------- Spediteur-Anfrage (Antwort nach wenigen Sekunden) ----------
 function carrierInquiry(id){
   if(asked.has(id)) return false; asked.add(id);
   const o=ORDERS[id], my=session;
@@ -704,11 +704,11 @@ function checkOrder(id,mail){
 
 // ---------------- Tools für den KI-Modus ----------------
 const TOOLS=[
-  {name:'bestellung_abrufen',description:'Prüft Bestellnummer + E-Mail, zeigt die Sendungskarte und fragt automatisch beim Spediteur nach (Antwort kommt nach ca. 1 Minute von selbst).',
+  {name:'bestellung_abrufen',description:'Prüft Bestellnummer + E-Mail, zeigt die Sendungskarte und fragt automatisch beim Spediteur nach (Antwort kommt nach wenigen Sekunden von selbst).',
    inputSchema:{type:'object',properties:{bestellnummer:{type:'string'},email:{type:'string'}},required:['bestellnummer','email']},
    execute:({bestellnummer,email})=>{const r=checkOrder(bestellnummer,email); if(r.err) return {fehler:r.err==='notFound'?'Bestellnummer nicht gefunden.':'E-Mail passt nicht – aus Datenschutzgründen keine Auskunft.'};
      showShipment(r.id,r.o); const neu=carrierInquiry(r.id); const o=r.o;
-     return {bestellnummer:r.id,status:S.de.st[o.st],artikel:itemsText(o),land:o.land,eu:COUNTRIES[o.land].eu,voraussichtlich:o.etaD?o.etaD.join(' bis '):'unklar',dienst:o.dienst,zahlung:o.pay,spediteur_anfrage:neu?'gesendet – Antwort erscheint in ca. 1 Minute automatisch':'bereits angefragt'};}},
+     return {bestellnummer:r.id,status:S.de.st[o.st],artikel:itemsText(o),land:o.land,eu:COUNTRIES[o.land].eu,voraussichtlich:o.etaD?o.etaD.join(' bis '):'unklar',dienst:o.dienst,zahlung:o.pay,spediteur_anfrage:neu?'gesendet – Antwort erscheint in wenigen Sekunden automatisch':'bereits angefragt'};}},
   {name:'rechnung_erstellen',description:'Erstellt die Rechnung zu einer bereits geprüften Bestellung und zeigt sie als Beleg im Chat.',
    inputSchema:{type:'object',properties:{bestellnummer:{type:'string'}},required:['bestellnummer']},
    execute:({bestellnummer})=>{const id=(bestellnummer||'').toUpperCase(); if(!verified.has(id)) return {fehler:'Bestellung zuerst mit Bestellnummer und E-Mail prüfen (bestellung_abrufen).'}; makeInvoice(id); return {ok:true,hinweis:'Rechnung wird angezeigt.'};}},

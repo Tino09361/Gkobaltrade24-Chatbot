@@ -7,7 +7,7 @@ Schulprojekt im Fach Wirtschaftsinformatik – Außenhandel, BS:WI Hamburg.
 
 ## Funktionen
 - Messenger-Design im Stil bekannter Chat-Apps, lockerer Du-Ton
-- Fragt bei Sendungsanfragen automatisch beim Spediteur nach – Antwort nach ca. 1 Minute (Demo-Tipp: Link mit `#schnell` am Ende → 8 Sekunden)
+- Fragt bei Sendungsanfragen automatisch beim Spediteur nach – Antwort nach wenigen Sekunden
 - Erstellt Rechnungen (USt. des Bestimmungslandes / steuerfreie Ausfuhr Schweiz) und Mengenangebote
 - Erklärt die 5 Bestseller mit Datenblatt
 - Automatische Spracherkennung: Deutsch, Englisch, Französisch, Spanisch, Niederländisch

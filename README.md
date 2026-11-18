@@ -7,12 +7,24 @@ Schulprojekt im Fach Wirtschaftsinformatik – Außenhandel, BS:WI Hamburg.
 
 ## Funktionen
 - Messenger-Design im Stil bekannter Chat-Apps, lockerer Du-Ton
+- Fragt bei Sendungsanfragen automatisch beim Spediteur nach – Antwort nach ca. 1 Minute (Demo-Tipp: Link mit `#schnell` am Ende → 8 Sekunden)
+- Erstellt Rechnungen (USt. des Bestimmungslandes / steuerfreie Ausfuhr Schweiz) und Mengenangebote
+- Erklärt die 5 Bestseller mit Datenblatt
 - Automatische Spracherkennung: Deutsch, Englisch, Französisch, Spanisch, Niederländisch
 - Sendungsverfolgung mit Prüfung von Bestellnummer + E-Mail (Datenschutz)
 - Versandkosten und Lieferzeiten je Land
 - Zollauskunft: EU-Binnenmarkt vs. Nicht-EU
 - Retouren, Rechnungen und Zahlungsarten je Land
 - Übergabe an einen Mitarbeiter (Ticket)
+
+## Bestseller
+| Produkt | Kategorie | Preis |
+|---|---|---|
+| ProBook 14 Air | Laptop | 899 € |
+| ErgoFlex Pro | Bürostuhl | 349 € |
+| ViewMax 27 USB-C | Monitor | 279 € |
+| SoundCall Duo | Headset | 89 € |
+| DeskDock 12-in-1 | USB-C-Dockingstation | 129 € |
 
 ## Test-Bestellungen
 | Bestellnummer | E-Mail | Land |

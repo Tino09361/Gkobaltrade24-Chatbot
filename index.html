@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GlobalTrade24 – KI-Kundenservice (Demo)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#12304f; --navy-2:#1f4e79; --accent:#f2a33a; --bg:#eef2f6; --card:#ffffff;
+    --ink:#1b2430; --muted:#6b7684; --line:#dde3ea; --bot:#f3f6fa; --user:#1f4e79;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{font-family:Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column}
+  header{background:var(--navy);color:#fff;padding:14px 22px;display:flex;align-items:center;gap:14px}
+  .logo{width:38px;height:38px;border-radius:10px;background:var(--accent);display:grid;place-items:center;font-weight:700;color:var(--navy)}
+  header h1{font-size:17px;margin:0;font-weight:600}
+  header p{margin:2px 0 0;font-size:12.5px;opacity:.75}
+  .badge{margin-left:auto;font-size:11.5px;background:rgba(255,255,255,.12);padding:5px 10px;border-radius:20px;white-space:nowrap}
+  main{flex:1;display:grid;grid-template-columns:1fr 300px;gap:18px;padding:18px;max-width:1180px;width:100%;margin:0 auto;min-height:0}
+  .chat{background:var(--card);border-radius:14px;box-shadow:0 1px 3px rgba(0,0,0,.06);display:flex;flex-direction:column;min-height:0}
+  .chat-head{padding:12px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;font-size:13.5px}
+  .dot{width:9px;height:9px;border-radius:50%;background:#2fb36b}
+  .chat-head .mode{margin-left:auto;color:var(--muted);font-size:12px}
+  #log{flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px}
+  .msg{max-width:78%;padding:10px 14px;border-radius:14px;line-height:1.5;font-size:14.5px;white-space:pre-wrap;word-wrap:break-word}
+  .bot{background:var(--bot);align-self:flex-start;border-bottom-left-radius:4px}
+  .user{background:var(--user);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .sys{align-self:center;font-size:12px;color:var(--muted);background:#fff7ea;border:1px solid #f6dcb0;padding:6px 12px;border-radius:20px;max-width:90%;text-align:center}
+  .handoff{align-self:stretch;background:#fff4e5;border:1px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:13.5px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:0 18px 10px}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:20px;padding:6px 12px;font-size:12.5px;cursor:pointer;color:var(--navy-2);font-family:inherit}
+  .chip:hover{border-color:var(--navy-2)}
+  form{display:flex;gap:10px;padding:12px 18px;border-top:1px solid var(--line)}
+  input[type=text]{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 14px;font-size:14.5px;font-family:inherit;outline:none}
+  input[type=text]:focus{border-color:var(--navy-2)}
+  button.send{background:var(--navy-2);color:#fff;border:0;border-radius:10px;padding:0 18px;font-weight:600;cursor:pointer;font-family:inherit}
+  button.send:disabled{opacity:.5;cursor:default}
+  aside{display:flex;flex-direction:column;gap:14px;overflow-y:auto;min-height:0}
+  .panel{background:var(--card);border-radius:14px;padding:14px 16px;box-shadow:0 1px 3px rgba(0,0,0,.06);font-size:13px}
+  .panel h3{margin:0 0 8px;font-size:13px;text-transform:uppercase;letter-spacing:.04em;color:var(--navy-2)}
+  .panel table{width:100%;border-collapse:collapse;font-size:12px}
+  .panel td{padding:4px 0;border-bottom:1px solid var(--line);vertical-align:top}
+  .panel td:first-child{font-weight:600;padding-right:8px;white-space:nowrap}
+  .panel ul{margin:0;padding-left:18px;line-height:1.6}
+  .typing{display:inline-flex;gap:4px}
+  .typing span{width:6px;height:6px;border-radius:50%;background:#9aa6b4;animation:b 1s infinite}
+  .typing span:nth-child(2){animation-delay:.15s}.typing span:nth-child(3){animation-delay:.3s}
+  @keyframes b{0%,80%,100%{opacity:.3}40%{opacity:1}}
+  .reset{background:none;border:1px solid var(--line);border-radius:8px;padding:6px 10px;font-size:12px;cursor:pointer;font-family:inherit;color:var(--muted);width:100%}
+  @media (max-width:860px){main{grid-template-columns:1fr}aside{order:2}.chat{min-height:70vh}.badge{display:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">GT</div>
+  <div>
+    <h1>GlobalTrade24 – Kundenservice</h1>
+    <p>KI-Assistent · 24/7 · DE · EN · FR · ES · PL · NL</p>
+  </div>
+  <div class="badge">Schulprojekt-Demo · fiktives Unternehmen</div>
+</header>
+
+<main>
+  <section class="chat">
+    <div class="chat-head"><span class="dot"></span><strong>Digitaler Assistent</strong><span class="mode" id="mode">wird verbunden …</span></div>
+    <div id="log" aria-live="polite"></div>
+    <div class="chips" id="chips">
+      <button class="chip">Wo ist meine Bestellung GT24-58123?</button>
+      <button class="chip">Fallen Zollgebühren für Frankreich an?</button>
+      <button class="chip">Was kostet der Versand nach Polen?</button>
+      <button class="chip">Ich möchte etwas zurückschicken</button>
+      <button class="chip">Bonjour, quels sont les délais de livraison ?</button>
+      <button class="chip">Ich möchte mit einem Mitarbeiter sprechen</button>
+    </div>
+    <form id="f">
+      <input type="text" id="q" placeholder="Ihre Frage in jeder Sprache …" autocomplete="off">
+      <button class="send" id="send">Senden</button>
+    </form>
+  </section>
+
+  <aside>
+    <div class="panel">
+      <h3>Test-Bestellungen</h3>
+      <table>
+        <tr><td>GT24-58123</td><td>Laptop · Frankreich<br>j.martin@beispiel.fr</td></tr>
+        <tr><td>GT24-58200</td><td>Bürostuhl · Spanien<br>l.garcia@beispiel.es</td></tr>
+        <tr><td>GT24-57990</td><td>Monitor · Polen<br>a.nowak@beispiel.pl</td></tr>
+        <tr><td>GT24-58301</td><td>Drucker · Schweiz<br>m.keller@beispiel.ch</td></tr>
+        <tr><td>GT24-58044</td><td>Headset · Niederlande<br>s.devries@beispiel.nl</td></tr>
+      </table>
+    </div>
+    <div class="panel">
+      <h3>Was der Bot kann</h3>
+      <ul>
+        <li>Sendungsverfolgung (mit Prüfung Bestellnr. + E-Mail)</li>
+        <li>Versandkosten &amp; Lieferzeiten je Land</li>
+        <li>Zoll: EU vs. Nicht-EU</li>
+        <li>Retoure anlegen</li>
+        <li>Rechnung &amp; Zahlungsarten</li>
+        <li>Produktinfos &amp; Verfügbarkeit</li>
+        <li>Übergabe an Mitarbeiter</li>
+      </ul>
+    </div>
+    <div class="panel">
+      <button class="reset" id="reset">Gespräch neu starten</button>
+    </div>
+  </aside>
+</main>
+
+<script>
+// ---------------- Wissensbasis (fiktiv) ----------------
+const KB = {
+  versand: {
+    DE:{name:"Deutschland",kosten:"4,90 € (ab 50 € gratis)",zeit:"1–2 Werktage",eu:true},
+    FR:{name:"Frankreich",kosten:"9,90 € (ab 100 € gratis)",zeit:"3–5 Werktage",eu:true},
+    ES:{name:"Spanien",kosten:"12,90 € (ab 120 € gratis)",zeit:"4–6 Werktage",eu:true},
+    PL:{name:"Polen",kosten:"8,90 € (ab 100 € gratis)",zeit:"3–4 Werktage",eu:true},
+    NL:{name:"Niederlande",kosten:"7,90 € (ab 80 € gratis)",zeit:"2–3 Werktage",eu:true},
+    CH:{name:"Schweiz",kosten:"19,90 €",zeit:"4–7 Werktage (inkl. Verzollung)",eu:false},
+    GB:{name:"Großbritannien",kosten:"24,90 €",zeit:"5–8 Werktage (inkl. Verzollung)",eu:false}
+  },
+  express:"Express (DHL Express) in alle EU-Länder: +14,90 €, Zustellung in 1–2 Werktagen.",
+  zoll:"Innerhalb der EU (DE, FR, ES, PL, NL …) gibt es keine Zölle – EU-Binnenmarkt. Die Mehrwertsteuer des Ziellandes ist bereits im Preis enthalten (OSS-Verfahren). Bei Nicht-EU-Ländern (z. B. Schweiz, Großbritannien) fallen ggf. Zoll und Einfuhrumsatzsteuer an. Versandbedingung: DAP – der Empfänger zahlt Zoll/Einfuhrumsatzsteuer bei Zustellung an den Paketdienst. Unter Schweizer Freigrenze (Steuerbetrag unter 5 CHF) fällt keine Einfuhrsteuer an. Genaue Beträge hängen von Warenwert und Zolltarifnummer ab – im Zweifel an Mitarbeiter verweisen.",
+  retoure:"30 Tage Rückgaberecht ab Zustellung (gesetzlich mind. 14 Tage Widerruf). Retouren aus EU-Ländern sind kostenlos (Retourenlabel per E-Mail). Aus der Schweiz/UK: Rücksendung auf Kundenkosten, Zollpapiere nötig – Mitarbeiter hilft. Erstattung innerhalb von 5–7 Werktagen nach Wareneingang. Defekte Ware: Gewährleistung 2 Jahre.",
+  zahlung:"Alle Länder: Kreditkarte (Visa, Mastercard), PayPal, Kauf auf Rechnung (nur DE & B2B nach Prüfung). Zusätzlich: Deutschland – SEPA-Lastschrift; Niederlande – iDEAL; Polen – BLIK, Przelewy24; Frankreich – Carte Bancaire; Spanien – Bizum. Rechnungen stehen im Kundenkonto als PDF bereit und können auch per E-Mail erneut gesendet werden.",
+  produkte:[
+    {name:"ProBook 14 Laptop",preis:"899 €",lager:"auf Lager",info:"14 Zoll, 16 GB RAM, 512 GB SSD; Tastaturlayout wählbar: DE, FR (AZERTY), ES, PL, NL/US"},
+    {name:"ErgoSit Bürostuhl",preis:"249 €",lager:"auf Lager",info:"ergonomisch, Lordosenstütze, bis 130 kg"},
+    {name:"ViewMax 27 Monitor",preis:"219 €",lager:"nur 3 Stück",info:"27 Zoll, QHD, USB-C"},
+    {name:"PrintJet 300 Drucker",preis:"159 €",lager:"Lieferbar in 2 Wochen",info:"Laser, WLAN, Duplex"},
+    {name:"SoundCall Headset",preis:"79 €",lager:"auf Lager",info:"Bluetooth, Geräuschunterdrückung"},
+    {name:"Kopierpapier A4 (5×500 Blatt)",preis:"24,90 €",lager:"auf Lager",info:"80 g/m²"}
+  ],
+  kontakt:"Service-Team Mo–Fr 8–18 Uhr, Antwort auf weitergeleitete Anfragen innerhalb von 24 Stunden."
+};
+
+// ---------------- Fiktive Bestelldatenbank ----------------
+const ORDERS = {
+  "GT24-58123":{email:"j.martin@beispiel.fr",name:"Jean Martin",land:"FR",ort:"Lyon",artikel:"ProBook 14 Laptop (1×)",wert:"899 €",status:"Versendet – im Transit",versandt:"9. Nov. 2026",eta:"Fr., 13. Nov. 2026",dienst:"DPD",tracking:"DPD 0153 8826 4471",zahlung:"Carte Bancaire – bezahlt"},
+  "GT24-58200":{email:"l.garcia@beispiel.es",name:"Lucía García",land:"ES",ort:"Valencia",artikel:"ErgoSit Bürostuhl (2×)",wert:"498 €",status:"In Bearbeitung – wird verpackt",versandt:"–",eta:"Di., 17. – Do., 19. Nov. 2026",dienst:"GLS",tracking:"noch nicht verfügbar",zahlung:"PayPal – bezahlt"},
+  "GT24-57990":{email:"a.nowak@beispiel.pl",name:"Anna Nowak",land:"PL",ort:"Krakau",artikel:"ViewMax 27 Monitor (1×)",wert:"219 €",status:"Zugestellt",versandt:"2. Nov. 2026",eta:"Zugestellt am 5. Nov. 2026",dienst:"DHL",tracking:"DHL 3400 1189 5521",zahlung:"BLIK – bezahlt"},
+  "GT24-58301":{email:"m.keller@beispiel.ch",name:"Markus Keller",land:"CH",ort:"Zürich",artikel:"PrintJet 300 Drucker (1×)",wert:"159 €",status:"Beim Zoll – Verzollung läuft",versandt:"6. Nov. 2026",eta:"Mo., 16. Nov. 2026",dienst:"DHL Express",tracking:"DHL 7720 5534 1902",zahlung:"Kreditkarte – bezahlt",hinweis:"Nicht-EU (DAP): Einfuhrumsatzsteuer der Schweiz (8,1 %) und ggf. Bearbeitungsgebühr zahlt der Empfänger an DHL."},
+  "GT24-58044":{email:"s.devries@beispiel.nl",name:"Sanne de Vries",land:"NL",ort:"Utrecht",artikel:"SoundCall Headset (1×)",wert:"79 €",status:"Zustellung verzögert – Adressproblem",versandt:"4. Nov. 2026",eta:"unklar",dienst:"PostNL",tracking:"PostNL 3S GT24 5804 4",zahlung:"iDEAL – bezahlt",hinweis:"Paket kam zurück ins Depot (Hausnummer fehlt). Fall für Mitarbeiter."}
+};
+
+// ---------------- Tools für die KI ----------------
+let verified = new Set();
+const TOOLS = [
+  {name:"bestellung_abrufen",
+   description:"Ruft Status, Lieferdatum und Tracking einer Bestellung ab. Benötigt Bestellnummer UND die E-Mail-Adresse des Kunden (Datenschutz-Prüfung).",
+   inputSchema:{type:"object",properties:{bestellnummer:{type:"string"},email:{type:"string"}},required:["bestellnummer","email"]},
+   execute:({bestellnummer,email})=>{
+     const id=(bestellnummer||"").trim().toUpperCase(); const o=ORDERS[id];
+     if(!o) return {fehler:"Bestellnummer nicht gefunden."};
+     if((email||"").trim().toLowerCase()!==o.email) return {fehler:"E-Mail passt nicht zur Bestellung. Aus Datenschutzgründen keine Auskunft."};
+     verified.add(id); const {email:_,...rest}=o; return {bestellnummer:id,...rest,land_name:KB.versand[o.land].name,eu:KB.versand[o.land].eu};
+   }},
+  {name:"retoure_anlegen",
+   description:"Legt eine Retoure für eine bereits verifizierte Bestellung an und verschickt das Retourenlabel per E-Mail.",
+   inputSchema:{type:"object",properties:{bestellnummer:{type:"string"},grund:{type:"string"}},required:["bestellnummer","grund"]},
+   execute:({bestellnummer,grund})=>{
+     const id=(bestellnummer||"").trim().toUpperCase();
+     if(!verified.has(id)) return {fehler:"Bestellung zuerst mit Bestellnummer und E-Mail verifizieren."};
+     const o=ORDERS[id]; if(!KB.versand[o.land].eu) return {fehler:"Retoure aus Nicht-EU-Land benötigt Zollpapiere – bitte an Mitarbeiter übergeben."};
+     if(o.status!=="Zugestellt") return {fehler:"Bestellung ist noch nicht zugestellt. Retoure erst nach Erhalt möglich – alternativ Annahme verweigern."};
+     return {retourennummer:"RT-"+Math.floor(100000+Math.random()*899999),label:"per E-Mail versendet",kosten:"kostenlos",erstattung:"5–7 Werktage nach Wareneingang",grund};
+   }},
+  {name:"an_mitarbeiter_uebergeben",
+   description:"Übergibt das Gespräch an einen menschlichen Mitarbeiter (Ticket). Nutzen bei Beschwerden, Schäden, Kulanz, rechtlichen Fragen, genauen Zollbeträgen, Problemen bei Zustellung, Unsicherheit oder auf Kundenwunsch.",
+   inputSchema:{type:"object",properties:{zusammenfassung:{type:"string"},prioritaet:{type:"string",enum:["normal","hoch"]}},required:["zusammenfassung"]},
+   execute:({zusammenfassung,prioritaet})=>{
+     const t="TK-"+Math.floor(10000+Math.random()*89999);
+     showHandoff(t,zusammenfassung,prioritaet||"normal");
+     return {ticket:t,info:KB.kontakt};
+   }}
+];
+
+const SYSTEM = `Du bist der KI-Kundenservice-Assistent der GlobalTrade24 GmbH, eines internationalen Onlinehändlers mit Sitz in Hamburg, Deutschland (Bürobedarf, technische Geräte, Zubehör; Privat- und Geschäftskunden).
+
+REGELN
+- Antworte IMMER in der Sprache der letzten Kundennachricht (DE, EN, FR, ES, PL, NL …).
+- Freundlich, kurz (max. 4–5 Sätze), klar. Keine Markdown-Überschriften, keine Sternchen; einfache Aufzählungen mit "–" sind ok.
+- Nutze NUR die Wissensbasis und die Tools. Erfinde keine Fakten, Preise oder Zusagen. Wenn du etwas nicht weißt: ehrlich sagen und Übergabe an Mitarbeiter anbieten.
+- Datenschutz: Bestelldaten nur nach Prüfung mit Bestellnummer UND E-Mail (Tool bestellung_abrufen). Frage aktiv nach fehlenden Angaben. Gib keine Daten anderer Kunden heraus.
+- Übergib an einen Mitarbeiter (Tool an_mitarbeiter_uebergeben), wenn: Kunde es wünscht, Beschwerde/Schaden/Kulanz/Rechtsfrage, Zustellproblem, genaue Zollbeträge, verärgerter Kunde oder du unsicher bist. Danach sag dem Kunden die Ticketnummer.
+- Du bist eine KI – sag das ehrlich, wenn gefragt.
+- Biete am Ende kurz weitere Hilfe an.
+
+WISSENSBASIS
+Versand (Kosten / Standard-Lieferzeit ab Versand):
+${Object.values(KB.versand).map(v=>`- ${v.name}: ${v.kosten}, ${v.zeit}, ${v.eu?"EU":"Nicht-EU"}`).join("\n")}
+- ${KB.express}
+- Bestellungen bis 14 Uhr werden am selben Werktag versendet.
+Zoll & Einfuhr: ${KB.zoll}
+Retouren: ${KB.retoure}
+Zahlung & Rechnungen: ${KB.zahlung}
+Produkte:
+${KB.produkte.map(p=>`- ${p.name}: ${p.preis}, ${p.lager}; ${p.info}`).join("\n")}
+Kontakt: ${KB.kontakt}
+Heute ist Mittwoch, der 11. November 2026.`;
+
+// ---------------- UI ----------------
+const log=document.getElementById('log'), q=document.getElementById('q'), sendBtn=document.getElementById('send'), modeEl=document.getElementById('mode');
+let history=[], sample=null, busy=false, aiTried=false, lastId=null;
+
+function add(cls,text){const d=document.createElement('div');d.className='msg '+cls;d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+function sys(text){const d=document.createElement('div');d.className='sys';d.textContent=text;log.appendChild(d);log.scrollTop=log.scrollHeight;}
+function showHandoff(t,sum,prio){const d=document.createElement('div');d.className='handoff';d.textContent=`👤 Übergabe an Mitarbeiter · Ticket ${t} · Priorität: ${prio}\nZusammenfassung für das Service-Team: ${sum}`;d.style.whiteSpace='pre-wrap';log.appendChild(d);log.scrollTop=log.scrollHeight;}
+function greet(){
+  history=[];verified=new Set();log.innerHTML='';
+  sys('Hinweis: Sie chatten mit einer KI. Ihre Daten werden gemäß DSGVO nur zur Bearbeitung Ihrer Anfrage verwendet.');
+  const g='Guten Tag! Willkommen bei GlobalTrade24. Ich bin Ihr digitaler Assistent und helfe Ihnen rund um Bestellungen, Versand, Zoll, Retouren und Zahlungen – in Ihrer Sprache. Wie kann ich Ihnen helfen?';
+  add('bot',g); history.push({role:'assistant',content:g});
+}
+
+// ---------------- Fallback ohne KI (regelbasiert) ----------------
+function fallback(text){
+  const t=text.toLowerCase();
+  const id=(text.match(/GT24-\d{5}/i)||[])[0]?.toUpperCase();
+  const mail=(text.match(/[\w.+-]+@[\w.-]+\.\w+/)||[])[0];
+  let oid=id||null; if(id) lastId=id; if(!oid&&mail&&lastId) oid=lastId;
+  if(/mitarbeiter|mensch|agent|beschwer|conseiller|humain|human|person|reclam|skarg|medewerker/.test(t)){TOOLS[2].execute({zusammenfassung:text});return 'Ich habe Ihre Anfrage an unser Service-Team weitergeleitet. '+KB.kontakt;}
+  if(oid&&mail){const r=TOOLS[0].execute({bestellnummer:oid,email:mail});return r.fehler||`Bestellung ${oid}: ${r.status}. Artikel: ${r.artikel}. Voraussichtliche Zustellung: ${r.eta}. Sendungsnummer: ${r.tracking}.${r.hinweis?' Hinweis: '+r.hinweis:''}`;}
+  if(id) return 'Gerne prüfe ich das. Bitte nennen Sie mir zusätzlich die E-Mail-Adresse, mit der Sie bestellt haben.';
+  if(/bestell|paket|liefer.*wann|wo ist/.test(t)) return 'Gerne prüfe ich Ihre Bestellung. Bitte nennen Sie mir Bestellnummer (z. B. GT24-58123) und E-Mail-Adresse.';
+  if(/zoll|einfuhr|douane|customs|aduana|cło|cla |douan/.test(t)){for(const v of Object.values(KB.versand)) if(t.includes(v.name.toLowerCase())) return v.eu?`Nein. ${v.name} gehört wie Deutschland zur EU. Im EU-Binnenmarkt fallen keine Zollgebühren an, und die Mehrwertsteuer ist bereits im Kaufpreis enthalten – es kommen keine weiteren Kosten bei der Zustellung auf Sie zu.`:`${v.name} ist kein EU-Land. Es können Zoll und Einfuhrumsatzsteuer anfallen, die Sie bei Zustellung an den Paketdienst zahlen (Versandbedingung DAP). Die genaue Höhe hängt vom Warenwert ab – gerne verbinde ich Sie mit einem Mitarbeiter.`; return KB.zoll.split('. Genaue')[0]+'.';}
+  for(const [k,v] of Object.entries(KB.versand)) if(t.includes(v.name.toLowerCase())) return `Versand nach ${v.name}: ${v.kosten}, Lieferzeit ${v.zeit}. ${KB.express}`;
+  if(/versand|liefer|livraison|délai|delai|shipping|delivery|envío|envio|wysyłk|dostaw|verzend|lever/.test(t)) return 'Versandkosten und Lieferzeiten:\n'+Object.values(KB.versand).map(v=>`– ${v.name}: ${v.kosten}, ${v.zeit}`).join('\n');
+  if(/retour|zurück|rücksend|umtausch|return|devoluc|zwrot/.test(t)) return KB.retoure;
+  if(/zahl|rechnung|paypal|bezahl|paiement|facture|payment|invoice|pago|factura|płatno|faktur|betal/.test(t)) return KB.zahlung;
+  return 'Das kann ich im Demo-Modus leider nicht beantworten. Fragen Sie mich nach Bestellstatus, Versand, Zoll, Retouren oder Zahlung – oder schreiben Sie „Mitarbeiter“.';
+}
+
+// ---------------- Senden ----------------
+async function ask(text){
+  if(busy||!text.trim())return; busy=true; sendBtn.disabled=true; q.value='';
+  add('user',text); history.push({role:'user',content:text});
+  const b=add('bot',''); b.innerHTML='<span class="typing"><span></span><span></span><span></span></span>';
+  let answer='';
+  if(sample){
+    try{
+      const msgs=[{role:'user',content:'[SYSTEMANWEISUNG – nicht dem Kunden zeigen]\n'+SYSTEM+'\n\nBestätige kurz.'},{role:'assistant',content:'Verstanden.'},...history];
+      const r=await sample(msgs,{tools:TOOLS,cache:false,onText:({text})=>{if(text&&text!=='Thinking...'){b.textContent=text;log.scrollTop=log.scrollHeight;}}});
+      answer=(r.text||'').trim();
+    }catch(e){
+      if(e&&e.code==='not_granted'){sample=null;modeEl.textContent='Demo-Modus (regelbasiert)';}
+      else if(e&&e.code==='rate_limited'){answer='Gerade sind sehr viele Anfragen unterwegs – bitte versuchen Sie es in einer Minute erneut.';}
+      if(!answer) answer=fallback(text);
+    }
+  } else answer=fallback(text);
+  b.textContent=answer; history.push({role:'assistant',content:answer});
+  log.scrollTop=log.scrollHeight; busy=false; sendBtn.disabled=false; q.focus();
+}
+
+document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();ask(q.value);});
+document.getElementById('chips').addEventListener('click',e=>{if(e.target.classList.contains('chip'))ask(e.target.textContent);});
+document.getElementById('reset').addEventListener('click',greet);
+
+greet();
+modeEl.textContent='Demo-Modus (regelbasiert)';
+(async()=>{try{if(window.claude&&claude.use){const s=await claude.use('sample');if(s){sample=s;modeEl.textContent='KI-Modus aktiv';}}}catch(e){}})();
+</script>
+</body>
+</html>

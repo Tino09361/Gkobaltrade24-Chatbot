@@ -211,7 +211,7 @@ function sys(text){const d=document.createElement('div');d.className='sys';d.tex
 function showHandoff(t,sum,prio){const d=document.createElement('div');d.className='handoff';d.textContent=`👤 Übergabe an Mitarbeiter · Ticket ${t} · Priorität: ${prio}\nZusammenfassung für das Service-Team: ${sum}`;d.style.whiteSpace='pre-wrap';log.appendChild(d);log.scrollTop=log.scrollHeight;}
 function greet(){
   history=[];verified=new Set();log.innerHTML='';
-  sys('Hinweis: Sie chatten mit einer KI. Ihre Daten werden gemäß DSGVO nur zur Bearbeitung Ihrer Anfrage verwendet.');
+  sys('Hinweis: Sie chatten mit einem automatisierten Assistenten (Chatbot), nicht mit einem Menschen. Ihre Daten werden gemäß DSGVO nur zur Bearbeitung Ihrer Anfrage verwendet.');
   const g='Guten Tag! Willkommen bei GlobalTrade24. Ich bin Ihr digitaler Assistent und helfe Ihnen rund um Bestellungen, Versand, Zoll, Retouren und Zahlungen – in Ihrer Sprache. Wie kann ich Ihnen helfen?';
   add('bot',g); history.push({role:'assistant',content:g});
 }

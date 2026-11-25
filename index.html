@@ -151,6 +151,7 @@
   .dnote{margin:0;padding:0 14px 6px;color:var(--muted);font-size:12px}
   .quote .dhead{border-bottom-color:var(--send)}
   .inco .dhead{border-bottom-color:#F3C318}
+  .customs .dhead{border-bottom-color:#3B9EDB}
   .inco tr.hi td{background:#FDF3C5}
   .inco td:nth-child(2){color:var(--muted);font-size:12px}
   .dsave{margin:4px 14px 10px;font:inherit;font-weight:600;font-size:13px;color:var(--bar);background:#E7F3EF;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}
@@ -213,11 +214,12 @@
     <button class="chip">Was ändert sich bei FCA statt DDP für 20 ProBook in die Schweiz?</button>
     <button class="chip">Welche Mengenrabatte gibt es?</button>
     <button class="chip">Angebot für 50 ErgoFlex Pro DAP nach Frankreich</button>
-    <button class="chip">Do I have to pay customs for Switzerland?</button>
+    <button class="chip">Wie viel Zoll zahle ich für 20 ProBook in die USA?</button>
+    <button class="chip">Was kostet die Einfuhr von 50 Headsets aus China?</button>
+    <button class="chip">Rabatt bei 40 Stück ViewMax?</button>
     <button class="chip">¿Cuánto pesa el ProBook 14 Air?</button>
-    <button class="chip">Ik wil iets terugsturen</button>
-    <button class="chip">Kann ich mit einem Mitarbeiter reden?</button>
-  </div>
+    <button class="chip">Telefonnummer von einem Mitarbeiter?</button>
+      </div>
   <form id="f">
     <div class="field">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="9" cy="10" r="1.2" fill="currentColor"/><circle cx="15" cy="10" r="1.2" fill="currentColor"/><path d="M8.5 14.5c1.8 2 5.2 2 7 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
@@ -241,6 +243,8 @@
     <li>Rechnungen erstellen</li>
     <li>Produkte erklären, Datenblätter und B2B-Angebote mit Mengenrabatt erstellen</li>
     <li>Incoterms erklären und Preise von EXW bis DDP vergleichen</li>
+    <li>Zoll, HS-Codes, Ausfuhr und Einfuhr (z. B. aus USA/China) berechnen</li>
+    <li>Rechnungen je nach Fall: Inland, EU (OSS / Reverse Charge), Export</li>
     <li>Versandkosten, Lieferzeiten und Zollfragen klären</li>
     <li>Retouren und Zahlungsarten erklären</li>
     <li>an das Service-Team übergeben</li>
@@ -298,7 +302,7 @@ const PRODUCTS={
     battery:null,
     compat:{de:'Körpergröße 150–195 cm, belastbar bis 130 kg',en:'body height 150–195 cm, up to 130 kg',fr:"taille 150–195 cm, jusqu'à 130 kg",es:'altura 150–195 cm, hasta 130 kg',nl:'lichaamslengte 150–195 cm, tot 130 kg'},
     box:{de:'Stuhl (zu 90 % vormontiert), Werkzeug, Anleitung',en:'chair (90% pre-assembled), tools, manual',fr:'chaise (pré-montée à 90 %), outils, notice',es:'silla (90 % premontada), herramientas, manual',nl:'stoel (90% voorgemonteerd), gereedschap, handleiding'},
-    keys:['ergoflex','bürostuhl','stuhl','chair','chaise','silla','stoel']},
+    keys:['ergoflex','bürostühle','bürostuhl','stühle','stuhl','chair','chaise','silla','stoel']},
   viewmax:{name:'ViewMax 27 USB-C',price:279,stock:8,weight:6.2,dims:'612 × 520 × 210 mm',warranty:3,colors:['black'],
     cat:{de:'Monitor',en:'Monitor',fr:'Écran',es:'Monitor',nl:'Monitor'},
     pitch:{de:'27-Zoll-Monitor mit USB-C: ein Kabel für Bild, Daten und Laden deines Laptops.',en:'27-inch monitor with USB-C: one cable for display, data and charging your laptop.',fr:"Écran 27 pouces avec USB-C : un seul câble pour l'image, les données et la charge du portable.",es:'Monitor de 27 pulgadas con USB-C: un solo cable para imagen, datos y carga del portátil.',nl:'27-inch monitor met USB-C: één kabel voor beeld, data en het opladen van je laptop.'},
@@ -325,7 +329,7 @@ const PRODUCTS={
     keys:['deskdock','dockingstation','docking','dock','hub']}
 };
 const COLORS={silver:{de:'Silber',en:'silver',fr:'argent',es:'plata',nl:'zilver'},grey:{de:'Grau',en:'grey',fr:'gris',es:'gris',nl:'grijs'},black:{de:'Schwarz',en:'black',fr:'noir',es:'negro',nl:'zwart'},white:{de:'Weiß',en:'white',fr:'blanc',es:'blanco',nl:'wit'}};
-function findProduct(t){for(const [id,p] of Object.entries(PRODUCTS)) for(const k of p.keys){ if(new RegExp('(^|[^a-zäöüßáéíóúñ])'+k+'($|[^a-zäöüßáéíóúñ])').test(t)) return id; } return null;}
+function findProduct(t){for(const [id,p] of Object.entries(PRODUCTS)) for(const k of p.keys){ if(new RegExp('(^|[^a-zäöüßáéíóúñ])'+k+'(e?s|n|en)?($|[^a-zäöüßáéíóúñ])').test(t)) return id; } return null;}
 
 // ---------------- Fiktive Bestellungen (Daten relativ zu heute) ----------------
 const ORDERS={
@@ -378,6 +382,7 @@ function makeOrder(id,mail){
     addr:`${SIM.street[land]} ${1+(h>>>14)%120}, ${String(10000+(h>>>3)%89999)} ${city}`,
     items:[{p,q:qty}],pay:SIM.pay[land],dienst:c,
     tracking:c+' '+String(1000000000+(h%8999999999)).slice(0,10),
+    b2b:!/gmail|gmx|web\.de|yahoo|hotmail|outlook|icloud|t-online|orange|free\.fr|wp\.pl|onet|live\.|aol|beispiel|mail\.(fr|de|com)/.test((mail||'').split('@')[1]||'gmail'),
     time:`${8+(h>>>5)%10}:${String((h>>>11)%60).padStart(2,'0')}`,sim:true,st};
   if(st==='transit'){o.keys=['ordered','shipped','transit','delivered'];o.at=2;o.ordered=isoIn(-(2+h%3));o.etaD=[isoIn(1+(h>>>6)%3)];}
   if(st==='processing'){o.keys=['ordered','packed','transit','delivered'];o.at=1;o.ordered=isoIn(-1);o.etaD=[isoIn(2+(h>>>6)%2),isoIn(4+(h>>>6)%2)];o.warehouse=true;o.tracking='–';}
@@ -422,7 +427,7 @@ let lang='de';
 const LANG_NAMES={de:'Deutsch',en:'Englisch',fr:'Französisch',es:'Spanisch',nl:'Niederländisch'};
 const LOCALE={de:'de-DE',en:'en-GB',fr:'fr-FR',es:'es-ES',nl:'nl-NL'};
 const WORDS={
- de:"ich und ist mein meine meiner wo wann was wie kostet kosten nach bitte zoll versand bestellung nicht mit ein eine der die das den dem hallo danke kann muss zurück zurückschicken für will möchte paket lieferung mitarbeiter reden sprechen rechnung zahlen geht gibt es auch schon schreib erstell mir angebot stück wie viel schwer erzähl mehr über eure euer habt bietet ihr welche gibt bedeutet heißt statt anstatt unterschied vergleich rabatt mengenrabatt ändert ändern preis",
+ de:"ich und ist mein meine meiner wo wann was wie kostet kosten nach bitte zoll versand bestellung nicht mit ein eine der die das den dem hallo danke kann muss zurück zurückschicken für will möchte paket lieferung mitarbeiter reden sprechen rechnung zahlen geht gibt es auch schon schreib erstell mir angebot stück wie viel schwer erzähl mehr über eure euer habt aus von nach bietet ihr welche gibt bedeutet heißt statt anstatt unterschied vergleich rabatt mengenrabatt ändert ändern preis",
  en:"i my is where when what how much does do the and order shipping ship cost costs customs duties return refund please hello hey thanks thank can want to an for delivery parcel package pay invoice talk speak human agent someone have it me tell about your you quote offer pieces heavy best sellers bestsellers instead compare difference discount change price",
  fr:"je mon ma mes est où quand quel quelle quels quelles les des le la commande livraison frais douane douanes retour retourner bonjour salut merci c'est pour combien délais délai delai vous tu et colis payer facture parler conseiller veux voudrais quoi dois moi devis pèse vos meilleures ventes au lieu plutôt comparer différence remise prix change",
  es:"yo mi mis es dónde donde cuándo cuando qué que el los las la pedido envío envio coste costo aduana aduanas devolución devolver hola gracias para cuánto cuanto quiero por y paquete pagar factura hablar persona agente tengo me presupuesto unidades pesa vuestros más vendidos en vez lugar comparar diferencia descuento precio cambia",
@@ -638,7 +643,9 @@ REGELN
 - Fragen zu einem Produkt: produkt_info aufrufen (zeigt ein Datenblatt) und die Frage konkret beantworten.
 - Angebot/Mengenpreis gewünscht: angebot_erstellen (B2B, Nettopreise). Mengenrabatte: ab 5 Stück 5 %, ab 10: 8 %, ab 25: 12 %, ab 50: 15 %, ab 100: 18 %, ab 250: 22 %. Außerdem 2 % Skonto bei Zahlung in 10 Tagen (sonst 30 Tage netto), frachtfrei in der EU ab 5.000 € Warenwert, Rahmenvertrag ab 25.000 € Jahresumsatz +3 %.
 - Incoterms® 2020: Wir bieten EXW, FCA, CPT, CIP, DAP, DPU, DDP (Versand ab Lager Hamburg per Lkw/Paket). Seeklauseln FOB/CFR/CIF/FAS nicht – stattdessen FCA/CPT/CIP. Kostenmodell: FCA +25 € Verladung (+35 € Ausfuhranmeldung außerhalb EU), ab CPT + Fracht, CIP + Versicherung, DPU +30 € Entladung, DDP außerhalb EU + 35 € Verzollung + Zoll + Einfuhrumsatzsteuer (CH 8,1 %, GB 20 %). Fragt der Kunde, wie sich der Preis bei z. B. FCA statt DDP ändert: incoterms_vergleich aufrufen und Preisunterschied UND Risikoübergang erklären.
-- An Mitarbeiter übergeben (an_mitarbeiter_uebergeben) bei Wunsch, Beschwerde, Schaden, Kulanz, Rechtsfragen, Zustellproblem oder Unsicherheit.
+- An Mitarbeiter übergeben (an_mitarbeiter_uebergeben) bei Wunsch nach Mitarbeiter/Telefonnummer, Beschwerde, Schaden, Kulanz, Rechtsfragen, Zustellproblem oder Unsicherheit. Nenne dem Kunden immer Name, Telefonnummer und Wartezeit aus dem Tool-Ergebnis.
+- Zoll & Außenhandel: Ausfuhr in Drittländer → zoll_ausfuhr_berechnen; Einfuhr aus Drittland (USA, China …) in die EU → einfuhr_in_eu_berechnen; Lieferungen innerhalb der EU = innergemeinschaftliche Lieferung/Erwerb (kein Zoll, Reverse Charge, beide USt-IdNrn.). HS-Codes: ProBook 8471 30 00, ErgoFlex 9401 71 00, ViewMax 8528 52 00, SoundCall 8518 30 00, DeskDock 8471 80 00. EU-Zollsätze (Annahme): 0 %, 2,7 %, 0 %, 2 %, 0 %. Präferenz 0 % mit Ursprungserklärung: CH, GB, NO, JP; Türkei Zollunion mit A.TR; USA 15 % (Annahme), China 0–10 %, VAE 5 %. Dokumente: Handelsrechnung, Packliste, Ausfuhranmeldung ATLAS (MRN), EORI, Präferenz-/Ursprungsnachweis. Erfinde weitere plausible Details frei.
+- Rechnungen fallbezogen: Inland 19 % USt.; EU-Privatkunde = OSS (USt. des Bestimmungslands); EU-Firmenkunde = steuerfreie innergemeinschaftliche Lieferung mit Reverse Charge; Drittland = steuerfreie Ausfuhr mit MRN.
 - Du bist ein KI-Bot und gibst dich NIE als Mensch aus.
 
 WISSENSBASIS
@@ -707,22 +714,6 @@ function saveDoc(card,fileName){
   const css=[...document.querySelectorAll('style')].map(s=>s.textContent).join('\n');
   const html=`<!DOCTYPE html><html lang="${lang}"><head><meta charset="utf-8"><title>${fileName}</title><style>${css}\nbody{display:block;background:#fff;padding:32px}.doc{max-width:640px;width:100%;margin:0 auto;box-shadow:none;border:1px solid #ddd}</style></head><body>${clone.outerHTML}</body></html>`;
   try{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([html],{type:'text/html'}));a.download=fileName+'.html';document.body.appendChild(a);a.click();a.remove();}catch(e){}
-}
-function makeInvoice(id){
-  const o=ORDERS[id], t=T(), I=t.inv, C=COUNTRIES[o.land];
-  const exportCase=!C.eu;
-  const lines=o.items.map(i=>{const p=PRODUCTS[i.p];const unit=exportCase?p.price/1.19:p.price;return {name:p.name,q:i.q,unit,sum:unit*i.q};});
-  const goods=lines.reduce((a,l)=>a+l.sum,0);
-  const listPrice=o.items.reduce((a,i)=>a+PRODUCTS[i.p].price*i.q,0);
-  let ship=(C.free&&listPrice>=C.free)?0:C.ship; if(exportCase) ship=ship/1.19;
-  const gross=goods+ship; const net=exportCase?gross:gross/(1+C.vat/100); const vat=gross-net;
-  const nr='RE-'+o.ordered.slice(0,4)+'-'+id.slice(5);
-  docCard('invoice',`🧾 ${I.title} ${I.no} ${nr}`,
-    [[I.date,fmtDate(o.ordered,true)],[I.order,id],[I.to,`${o.name}, ${o.addr}, ${t.c[o.land]}`]],
-    {head:[I.qty,I.item,'€',I.total],body:[...lines.map(l=>[l.q+'×',l.name,eur(l.unit),eur(l.sum)]),['',I.ship,'',ship===0?I.free:eur(ship)]]},
-    [[I.net,eur(net)],[`${I.vat} ${C.vat} %`,eur(vat)],[I.gross,eur(gross),true]],
-    [I.paid(o.pay)+' ✓', exportCase?I.exp:I.oss],
-    I.save, `Rechnung_${nr}`);
 }
 // ---------- Produkt-Datenblatt ----------
 function showProduct(pid){
@@ -968,7 +959,7 @@ function incoHandler(text,t,tClean,pid,qty,wantsQuote){
   const mentionsInco=/incoterm|lieferbeding|lieferklausel|delivery term|trade term|condiciones de entrega|leveringsvoorwaard|conditions de livraison/.test(t);
   const discWord=/mengenrabatt|rabatt|staffel|volume discount|bulk discount|discount|remise|descuento|korting|skonto|rahmenvertrag/.test(t);
   const priceWord=/preis|kost|price|cost|prix|co[uû]t|precio|cuesta|cu[aá]nto|prijs|g[uü]nstig|teuer|cheap|expensive|[äa]nder|change|unterschied|differ|vergleich|compar|statt|instead|lieu|vez|plaats|\bvs\b|versus|rechne|calcul|bereken/.test(t);
-  if(!terms.length&&!sea.length&&!mentionsInco&&!pendingInco){ if(discWord&&!wantsQuote) return k.disc; return null; }
+  if(!terms.length&&!sea.length&&!mentionsInco&&!pendingInco){   if(discWord&&!wantsQuote){ if(qty){const da=discountAnswer(qty,pid); if(da) return da;} return k.disc; } return null; }
   if(sea.length&&!terms.length) return k.sea;
   const cc=findCountry(tClean)||lastCountry||(lastId&&verified.has(lastId)?ORDERS[lastId].land:null)||SIM.byLang[lang]||'DE';
   const prod=pid||(pendingInco||terms.length?lastProduct:null);
@@ -993,6 +984,330 @@ function incoHandler(text,t,tClean,pid,qty,wantsQuote){
   return k.listHead+'\n'+TERMS.map(x=>`– ${x}: ${k.def[x]}`).join('\n')+'\n'+k.listTail;
 }
 
+
+// ---------------- Zoll & Einfuhr (Außenhandel, plausibel erfunden) ----------------
+const HS={
+  probook:{code:'8471 30 00',d:{de:'tragbare Datenverarbeitungsmaschinen bis 10 kg',en:'portable data-processing machines up to 10 kg',fr:"machines portables de traitement de l'information jusqu'à 10 kg",es:'máquinas portátiles de tratamiento de datos de hasta 10 kg',nl:'draagbare gegevensverwerkende machines tot 10 kg'}},
+  ergoflex:{code:'9401 71 00',d:{de:'gepolsterte Sitzmöbel mit Metallgestell',en:'upholstered seats with metal frames',fr:'sièges rembourrés à bâti en métal',es:'asientos con relleno y armazón de metal',nl:'gestoffeerde zitmeubelen met metalen frame'}},
+  viewmax:{code:'8528 52 00',d:{de:'Monitore zum Anschluss an Datenverarbeitungsmaschinen',en:'monitors for connection to data-processing machines',fr:"moniteurs pour machines de traitement de l'information",es:'monitores para máquinas de tratamiento de datos',nl:'monitoren voor gegevensverwerkende machines'}},
+  soundcall:{code:'8518 30 00',d:{de:'Kopfhörer, mit Mikrofon kombiniert',en:'headphones combined with a microphone',fr:'casques combinés avec un microphone',es:'auriculares combinados con micrófono',nl:'hoofdtelefoons gecombineerd met een microfoon'}},
+  deskdock:{code:'8471 80 00',d:{de:'andere Einheiten für Datenverarbeitungsmaschinen',en:'other units of data-processing machines',fr:"autres unités de machines de traitement de l'information",es:'otras unidades de máquinas de tratamiento de datos',nl:'andere eenheden voor gegevensverwerkende machines'}}
+};
+const CUS={
+  CH:{vat:8.1,fee:35,duty:{},pref:'pref',fr:[70,.9]},
+  GB:{vat:20,fee:30,duty:{soundcall:2,viewmax:2},pref:'pref',fr:[85,1.0]},
+  NO:{vat:25,fee:40,duty:{},pref:'pref',fr:[80,1.0]},
+  TR:{vat:20,fee:45,duty:{},pref:'atr',fr:[110,1.2]},
+  US:{vat:0,fee:45,duty:{probook:15,ergoflex:15,viewmax:15,soundcall:15,deskdock:15},pref:'none',fr:[180,2.5]},
+  CN:{vat:13,fee:50,duty:{soundcall:10,ergoflex:6},pref:'none',fr:[220,3.0]},
+  JP:{vat:10,fee:40,duty:{},pref:'pref',fr:[230,3.0]},
+  AE:{vat:5,fee:40,duty:{probook:5,ergoflex:5,viewmax:5,soundcall:5,deskdock:5},pref:'none',fr:[160,2.2]}
+};
+const CUS_ALIASES={NO:['norwegen','norway','norvège','norvege','noruega','noorwegen'],TR:['türkei','tuerkei','turkey','türkiye','turquie','turquía','turquia','turkije'],US:['usa','u\\.s\\.a?','vereinigte staaten','amerika','united states','america','états-unis','etats-unis','estados unidos','eeuu','verenigde staten'],CN:['china','chine'],JP:['japan','japon','japón'],AE:['vae','uae','dubai','dubaï','emirate','emiraten','emirates','émirats','emiratos']};
+const CUS_NAMES={NO:{de:'Norwegen',en:'Norway',fr:'Norvège',es:'Noruega',nl:'Noorwegen'},TR:{de:'Türkei',en:'Türkiye',fr:'Turquie',es:'Turquía',nl:'Turkije'},US:{de:'USA',en:'the USA',fr:'les États-Unis',es:'EE. UU.',nl:'de VS'},CN:{de:'China',en:'China',fr:'la Chine',es:'China',nl:'China'},JP:{de:'Japan',en:'Japan',fr:'le Japon',es:'Japón',nl:'Japan'},AE:{de:'die VAE',en:'the UAE',fr:'les Émirats',es:'los EAU',nl:'de VAE'}};
+function cName(cc){return T().c[cc]||CUS_NAMES[cc][lang];}
+function findCustomsCountry(t){
+  const c=findCountry(t); if(c) return c;
+  for(const [code,al] of Object.entries(CUS_ALIASES)) for(const a of al){ if(new RegExp('(^|[^a-zäöüßáéíóúñ])'+a+'($|[^a-zäöüßáéíóúñ])').test(t)) return code; }
+  return null;
+}
+function customsCalc(pid,qty,cc){
+  const p=PRODUCTS[pid], C=CUS[cc];
+  const unit=r2(p.price/1.19), goods=r2(unit*qty), d=discountFor(qty), net=r2(goods-goods*d/100);
+  const freight=r2(C.fr[0]+C.fr[1]*p.weight*qty), ins=Math.max(5,r2(net*1.1*0.003)), value=r2(net+freight+ins);
+  const base=(C.duty[pid]||0), rate=C.pref==='none'?base:0;
+  const duty=r2(value*rate/100), ivat=r2((value+duty)*C.vat/100), charges=r2(duty+ivat+C.fee);
+  return {net,freight,ins,value,base,rate,duty,ivat,fee:C.fee,charges,landed:r2(value+charges),d};
+}
+const CX={
+ de:{title:'Einfuhrabgaben-Berechnung',dest:'Bestimmungsland',prefL:'Präferenz',goods:'Warenwert netto',freight:'Fracht bis zur Grenze',ins:'Versicherung',value:'Zollwert (CIF)',duty:'Zoll',ivat:'Einfuhrumsatzsteuer',fee:'Abfertigung (Spediteur)',charges:'Einfuhrabgaben gesamt',landed:'Gesamtkosten beim Empfänger',
+   pref:{pref:'Ja – 0 % Zoll mit Ursprungserklärung',atr:'Zollunion – 0 % Zoll mit A.TR',none:'kein Präferenzabkommen'},
+   prefSent:{pref:' Dank Präferenzabkommen mit der EU gilt 0 % Zoll – du brauchst nur die Ursprungserklärung auf unserer Rechnung.',atr:' EU und Türkei bilden eine Zollunion: 0 % Zoll mit der Warenverkehrsbescheinigung A.TR.',none:''},
+   usTax:'In den USA gibt es keine Einfuhrumsatzsteuer – je nach Bundesstaat fällt beim Weiterverkauf Sales Tax an.',
+   basis:'Vereinfachte Berechnung, alle Sätze sind Annahmen für die Simulation.',
+   calc:(q,p,c,ch,lc,rate,vat)=>`Für ${q}× ${p} nach ${c} rechne ich mit ca. ${ch} Einfuhrabgaben (Zoll ${rate} %, ${vat?'Einfuhrumsatzsteuer '+vat+' %':'keine Einfuhrumsatzsteuer'}, plus Abfertigung). Inklusive Fracht kostet dich die Ware dort rund ${lc}.`,
+   tail:' Alles im Detail 👇',
+   country:(c,pr,vat,range,cc)=>`${c} ist nicht in der EU, deshalb wird bei der Einfuhr verzollt. Präferenz: ${pr}. ${cc==='US'?'Eine Einfuhrumsatzsteuer gibt es dort nicht (Sales Tax je nach Bundesstaat).':'Einfuhrumsatzsteuer: '+vat+' %.'} Zoll auf unsere Produkte: ${range}. Soll ich es dir für ein Produkt und eine Menge ausrechnen?`,
+   hs:(p,code,desc)=>`Die Zolltarifnummer für ${p} ist ${code} (${desc}). Die ersten 6 Ziffern sind weltweit gleich (HS-Code), die letzten beiden gelten im EU-Zolltarif.`,
+   hsAll:'Zolltarifnummern unserer Bestseller:',
+   docs:{eu:c=>`Für ${c} brauchst du keine Zollpapiere – EU-Binnenmarkt. Es reichen die Rechnung mit beiden USt-IdNrn. und die Gelangensbestätigung als Nachweis.`,
+     pref:c=>`Für ${c} brauchst du: Handelsrechnung, Packliste, die Ausfuhranmeldung (die erstellen wir über ATLAS, du bekommst die MRN) und eine Ursprungserklärung auf der Rechnung – damit gilt 0 % Zoll. Der Empfänger braucht dort eine eigene Importeursnummer.`,
+     atr:c=>`Für ${c} brauchst du: Handelsrechnung, Packliste, Ausfuhranmeldung (MRN) und die Warenverkehrsbescheinigung A.TR – wegen der Zollunion EU–Türkei gilt damit 0 % Zoll.`,
+     none:c=>`Für ${c} brauchst du: Handelsrechnung, Packliste, Ausfuhranmeldung (MRN) und bei Bedarf ein Ursprungszeugnis der IHK Hamburg. Ein Präferenzabkommen gibt es nicht, deshalb gilt der normale Zollsatz.`,
+     gen:'Für Lieferungen außerhalb der EU gilt: Handelsrechnung, Packliste, Ausfuhranmeldung über ATLAS (die MRN ist unser Ausfuhrnachweis) und je nach Land ein Präferenznachweis (Ursprungserklärung, A.TR) oder ein Ursprungszeugnis. Unsere EORI-Nummer steht auf jeder Rechnung. In welches Land geht die Lieferung?'},
+   imp:'Bei Lieferungen außerhalb der EU erledigen wir die Ausfuhr (Ausfuhranmeldung über ATLAS). Bei der Einfuhr im Zielland zählen drei Dinge: Zolltarifnummer, Zollwert und Ursprung der Ware. Daraus ergeben sich Zoll und Einfuhrumsatzsteuer. Sag mir Produkt, Menge und Land – dann rechne ich es dir aus. 🧮'},
+ en:{title:'Import duty calculation',dest:'Destination',prefL:'Preference',goods:'Goods value (net)',freight:'Freight to the border',ins:'Insurance',value:'Customs value (CIF)',duty:'Import duty',ivat:'Import VAT',fee:'Clearance (forwarder)',charges:'Total import charges',landed:'Landed cost',
+   pref:{pref:'Yes – 0% duty with origin statement',atr:'Customs union – 0% duty with A.TR',none:'no preferential agreement'},
+   prefSent:{pref:' Thanks to the preferential agreement with the EU, duty is 0% – you only need the origin statement on our invoice.',atr:' The EU and Türkiye form a customs union: 0% duty with the A.TR movement certificate.',none:''},
+   usTax:"There's no import VAT in the USA – depending on the state, sales tax applies on resale.",
+   basis:'Simplified calculation; all rates are assumptions for this simulation.',
+   calc:(q,p,c,ch,lc,rate,vat)=>`For ${q}× ${p} to ${c} I'd expect about ${ch} in import charges (duty ${rate}%, ${vat?'import VAT '+vat+'%':'no import VAT'}, plus clearance). Including freight, the goods will cost you around ${lc} there.`,
+   tail:' Full breakdown 👇',
+   country:(c,pr,vat,range,cc)=>`${c} isn't in the EU, so the goods are cleared through customs on import. Preference: ${pr}. ${cc==='US'?"There's no import VAT there (sales tax depends on the state).":'Import VAT: '+vat+'%.'} Duty on our products: ${range}. Shall I calculate it for a product and quantity?`,
+   hs:(p,code,desc)=>`The commodity code for the ${p} is ${code} (${desc}). The first 6 digits are the same worldwide (HS code); the last two apply in the EU tariff.`,
+   hsAll:'Commodity codes of our best sellers:',
+   docs:{eu:c=>`For ${c} you don't need customs papers – it's the EU single market. The invoice with both VAT IDs and the proof of arrival are enough.`,
+     pref:c=>`For ${c} you need: commercial invoice, packing list, the export declaration (we file it via ATLAS and send you the MRN) and an origin statement on the invoice – that gets you 0% duty. The consignee needs their own importer number there.`,
+     atr:c=>`For ${c} you need: commercial invoice, packing list, export declaration (MRN) and the A.TR movement certificate – thanks to the EU–Türkiye customs union that means 0% duty.`,
+     none:c=>`For ${c} you need: commercial invoice, packing list, export declaration (MRN) and, if required, a certificate of origin from the Hamburg Chamber of Commerce. There's no preferential agreement, so the standard duty rate applies.`,
+     gen:'For deliveries outside the EU: commercial invoice, packing list, export declaration via ATLAS (the MRN is our proof of export) and, depending on the country, proof of preferential origin (origin statement, A.TR) or a certificate of origin. Our EORI number is on every invoice. Which country is the delivery going to?'},
+   imp:'For deliveries outside the EU we handle export clearance (export declaration via ATLAS). On import in the destination country, three things count: commodity code, customs value and origin. Those determine duty and import VAT. Tell me the product, quantity and country and I\'ll calculate it. 🧮'},
+ fr:{title:"Calcul des droits à l'importation",dest:'Pays de destination',prefL:'Préférence',goods:'Valeur marchandise HT',freight:"Fret jusqu'à la frontière",ins:'Assurance',value:'Valeur en douane (CIF)',duty:'Droits de douane',ivat:"TVA à l'importation",fee:'Dédouanement (transitaire)',charges:"Total des taxes à l'importation",landed:'Coût de revient rendu',
+   pref:{pref:"Oui – 0 % de droits avec déclaration d'origine",atr:'Union douanière – 0 % avec A.TR',none:'pas d’accord préférentiel'},
+   prefSent:{pref:" Grâce à l'accord préférentiel avec l'UE, 0 % de droits – il suffit de la déclaration d'origine sur notre facture.",atr:" L'UE et la Turquie forment une union douanière : 0 % de droits avec le certificat A.TR.",none:''},
+   usTax:"Aux États-Unis, il n'y a pas de TVA à l'importation – selon l'État, une sales tax s'applique à la revente.",
+   basis:'Calcul simplifié, tous les taux sont des hypothèses pour la simulation.',
+   calc:(q,p,c,ch,lc,rate,vat)=>`Pour ${q}× ${p} vers ${c}, compte environ ${ch} de taxes à l'importation (droits ${rate} %, ${vat?'TVA import '+vat+' %':"pas de TVA à l'importation"}, plus dédouanement). Fret compris, la marchandise te revient à environ ${lc} sur place.`,
+   tail:' Le détail 👇',
+   country:(c,pr,vat,range,cc)=>`${c[0].toUpperCase()+c.slice(1)} ne fait pas partie de l'UE : la marchandise est dédouanée à l'importation. Préférence : ${pr}. ${cc==='US'?"Pas de TVA à l'importation (sales tax selon l'État).":"TVA à l'importation : "+vat+' %.'} Droits sur nos produits : ${range}. Je te le calcule pour un produit et une quantité ?`,
+   hs:(p,code,desc)=>`Le code douanier du ${p} est ${code} (${desc}). Les 6 premiers chiffres sont identiques dans le monde entier (code SH), les deux derniers s'appliquent au tarif de l'UE.`,
+   hsAll:'Codes douaniers de nos meilleures ventes :',
+   docs:{eu:c=>`Pour ${c}, pas besoin de documents douaniers – marché unique de l'UE. La facture avec les deux numéros de TVA et l'attestation d'arrivée suffisent.`,
+     pref:c=>`Pour ${c}, il te faut : facture commerciale, liste de colisage, déclaration d'export (nous la faisons via ATLAS, tu reçois le MRN) et une déclaration d'origine sur la facture – ainsi 0 % de droits. Le destinataire a besoin d'un numéro d'importateur local.`,
+     atr:c=>`Pour ${c}, il te faut : facture commerciale, liste de colisage, déclaration d'export (MRN) et le certificat A.TR – grâce à l'union douanière UE–Turquie, 0 % de droits.`,
+     none:c=>`Pour ${c}, il te faut : facture commerciale, liste de colisage, déclaration d'export (MRN) et, si nécessaire, un certificat d'origine de la CCI de Hambourg. Pas d'accord préférentiel, donc le taux normal s'applique.`,
+     gen:"Hors UE : facture commerciale, liste de colisage, déclaration d'export via ATLAS (le MRN prouve l'exportation) et, selon le pays, une preuve d'origine préférentielle (déclaration d'origine, A.TR) ou un certificat d'origine. Notre numéro EORI figure sur chaque facture. Vers quel pays va la livraison ?"},
+   imp:"Pour les livraisons hors UE, nous gérons l'export (déclaration via ATLAS). À l'importation, trois éléments comptent : code douanier, valeur en douane et origine. Ils déterminent les droits et la TVA. Donne-moi produit, quantité et pays, je te calcule tout. 🧮"},
+ es:{title:'Cálculo de derechos de importación',dest:'País de destino',prefL:'Preferencia',goods:'Valor de la mercancía (neto)',freight:'Flete hasta la frontera',ins:'Seguro',value:'Valor en aduana (CIF)',duty:'Aranceles',ivat:'IVA de importación',fee:'Despacho (transitario)',charges:'Total gravámenes de importación',landed:'Coste total en destino',
+   pref:{pref:'Sí – 0 % de arancel con declaración de origen',atr:'Unión aduanera – 0 % con A.TR',none:'sin acuerdo preferencial'},
+   prefSent:{pref:' Gracias al acuerdo preferencial con la UE, el arancel es del 0 %: solo necesitas la declaración de origen en nuestra factura.',atr:' La UE y Turquía forman una unión aduanera: 0 % de arancel con el certificado A.TR.',none:''},
+   usTax:'En EE. UU. no hay IVA de importación; según el estado se aplica sales tax en la reventa.',
+   basis:'Cálculo simplificado; todos los tipos son supuestos para la simulación.',
+   calc:(q,p,c,ch,lc,rate,vat)=>`Para ${q}× ${p} a ${c} calculo unos ${ch} de gravámenes de importación (arancel ${rate} %, ${vat?'IVA de importación '+vat+' %':'sin IVA de importación'}, más despacho). Con el flete, la mercancía te sale por unos ${lc} allí.`,
+   tail:' El detalle 👇',
+   country:(c,pr,vat,range,cc)=>`${c} no está en la UE, así que la mercancía se despacha en aduana al importarla. Preferencia: ${pr}. ${cc==='US'?'No hay IVA de importación (sales tax según el estado).':'IVA de importación: '+vat+' %.'} Arancel para nuestros productos: ${range}. ¿Te lo calculo para un producto y una cantidad?`,
+   hs:(p,code,desc)=>`El código arancelario del ${p} es ${code} (${desc}). Los 6 primeros dígitos son iguales en todo el mundo (código SA); los dos últimos se aplican en el arancel de la UE.`,
+   hsAll:'Códigos arancelarios de nuestros más vendidos:',
+   docs:{eu:c=>`Para ${c} no necesitas documentos aduaneros: es el mercado único de la UE. Bastan la factura con ambos NIF-IVA y el certificado de llegada.`,
+     pref:c=>`Para ${c} necesitas: factura comercial, lista de embalaje, la declaración de exportación (la hacemos por ATLAS y te damos el MRN) y una declaración de origen en la factura: así el arancel es del 0 %. El destinatario necesita su propio número de importador.`,
+     atr:c=>`Para ${c} necesitas: factura comercial, lista de embalaje, declaración de exportación (MRN) y el certificado A.TR: gracias a la unión aduanera UE–Turquía, 0 % de arancel.`,
+     none:c=>`Para ${c} necesitas: factura comercial, lista de embalaje, declaración de exportación (MRN) y, si hace falta, un certificado de origen de la Cámara de Comercio de Hamburgo. No hay acuerdo preferencial, así que se aplica el arancel normal.`,
+     gen:'Fuera de la UE: factura comercial, lista de embalaje, declaración de exportación por ATLAS (el MRN es nuestra prueba de exportación) y, según el país, prueba de origen preferencial (declaración de origen, A.TR) o certificado de origen. Nuestro número EORI figura en cada factura. ¿A qué país va el envío?'},
+   imp:'En los envíos fuera de la UE nos encargamos de la exportación (declaración por ATLAS). En la importación cuentan tres cosas: código arancelario, valor en aduana y origen. De ahí salen el arancel y el IVA. Dime producto, cantidad y país y te lo calculo. 🧮'},
+ nl:{title:'Berekening invoerrechten',dest:'Land van bestemming',prefL:'Preferentie',goods:'Goederenwaarde netto',freight:'Vracht tot de grens',ins:'Verzekering',value:'Douanewaarde (CIF)',duty:'Invoerrechten',ivat:'Invoer-btw',fee:'Inklaring (expediteur)',charges:'Totaal invoerkosten',landed:'Totale kosten bij ontvanger',
+   pref:{pref:'Ja – 0% rechten met oorsprongsverklaring',atr:'Douane-unie – 0% met A.TR',none:'geen preferentieel akkoord'},
+   prefSent:{pref:' Dankzij het preferentiële akkoord met de EU geldt 0% invoerrecht – je hebt alleen de oorsprongsverklaring op onze factuur nodig.',atr:' De EU en Turkije vormen een douane-unie: 0% invoerrecht met het A.TR-certificaat.',none:''},
+   usTax:'In de VS is er geen invoer-btw – afhankelijk van de staat geldt sales tax bij doorverkoop.',
+   basis:'Vereenvoudigde berekening; alle tarieven zijn aannames voor de simulatie.',
+   calc:(q,p,c,ch,lc,rate,vat)=>`Voor ${q}× ${p} naar ${c} reken ik op ca. ${ch} aan invoerkosten (invoerrecht ${rate}%, ${vat?'invoer-btw '+vat+'%':'geen invoer-btw'}, plus inklaring). Inclusief vracht kost de lading je daar ongeveer ${lc}.`,
+   tail:' Alles in detail 👇',
+   country:(c,pr,vat,range,cc)=>`${c[0].toUpperCase()+c.slice(1)} hoort niet bij de EU, dus de goederen worden bij invoer ingeklaard. Preferentie: ${pr}. ${cc==='US'?'Er is daar geen invoer-btw (sales tax per staat).':'Invoer-btw: '+vat+'%.'} Invoerrecht op onze producten: ${range}. Zal ik het uitrekenen voor een product en aantal?`,
+   hs:(p,code,desc)=>`De goederencode voor de ${p} is ${code} (${desc}). De eerste 6 cijfers zijn wereldwijd gelijk (HS-code), de laatste twee gelden in het EU-douanetarief.`,
+   hsAll:'Goederencodes van onze bestsellers:',
+   docs:{eu:c=>`Voor ${c} heb je geen douanepapieren nodig – EU-interne markt. De factuur met beide btw-nummers en het bewijs van aankomst zijn genoeg.`,
+     pref:c=>`Voor ${c} heb je nodig: handelsfactuur, paklijst, de exportaangifte (die doen wij via ATLAS, je krijgt het MRN) en een oorsprongsverklaring op de factuur – daarmee geldt 0% invoerrecht. De ontvanger heeft daar een eigen importeursnummer nodig.`,
+     atr:c=>`Voor ${c} heb je nodig: handelsfactuur, paklijst, exportaangifte (MRN) en het A.TR-certificaat – dankzij de douane-unie EU–Turkije geldt dan 0% invoerrecht.`,
+     none:c=>`Voor ${c} heb je nodig: handelsfactuur, paklijst, exportaangifte (MRN) en zo nodig een certificaat van oorsprong van de Kamer van Koophandel Hamburg. Er is geen preferentieel akkoord, dus het normale tarief geldt.`,
+     gen:'Buiten de EU: handelsfactuur, paklijst, exportaangifte via ATLAS (het MRN is ons exportbewijs) en, afhankelijk van het land, een preferentieel oorsprongsbewijs (oorsprongsverklaring, A.TR) of een certificaat van oorsprong. Ons EORI-nummer staat op elke factuur. Naar welk land gaat de levering?'},
+   imp:'Bij leveringen buiten de EU regelen wij de export (aangifte via ATLAS). Bij invoer in het land van bestemming tellen drie dingen: goederencode, douanewaarde en oorsprong. Daaruit volgen invoerrecht en btw. Geef me product, aantal en land, dan reken ik het uit. 🧮'}
+};
+const CXL=()=>CX[lang];
+
+let lastCtx=null;
+function showCustoms(pid,qty,cc){ lastCtx='customs';
+  const t=T(), x=CXL(), p=PRODUCTS[pid], C=CUS[cc], r=customsCalc(pid,qty,cc), I=t.inv;
+  const sums=[[x.goods+(r.d?` (−${r.d} %)`:''),eur(r.net)],[x.freight,eur(r.freight)],[x.ins,eur(r.ins)],[x.value,eur(r.value)],
+    [`${x.duty} ${num(r.rate,1)} %`+(r.base&&!r.rate?` (${num(r.base,1)} %)`:''),eur(r.duty)],[`${x.ivat} ${num(C.vat,1)} %`,eur(r.ivat)],[x.fee,eur(r.fee)],[x.charges,eur(r.charges),true],[x.landed,eur(r.landed)]];
+  const notes=[x.basis]; if(cc==='US') notes.unshift(x.usTax);
+  docCard('customs',`🛃 ${x.title}`,[[x.dest,cName(cc)],[x.prefL,x.pref[C.pref]]],
+    {head:['HS',I.item,I.qty,I.total],body:[[HS[pid].code,p.name,qty+'×',eur(r.net)]]},sums,notes,x.title,`Einfuhrabgaben_${p.name.replace(/\W+/g,'_')}_${cc}`);
+  lastProduct=pid; lastQty=qty; lastCountry=COUNTRIES[cc]?cc:lastCountry;
+  return r;
+}
+function customsHandler(t,tClean,pid,qty){
+  const x=CXL();
+  const cc0=findCustomsCountry(tClean);
+  const zollW=/zoll|einfuhr|import|douane|customs|dut(y|ies)|aduana|arancel|invoer|abgaben|droits/.test(t)||(lastCtx==='customs'&&!!cc0&&tClean.split(/\s+/).length<=6);
+  const hsW=/hs[- ]?code|zolltarif|tarifnummer|warennummer|tariff (code|number)|commodity code|code (douanier|sh)|nomenclature|c[oó]digo (arancelario|taric|sa|hs)|taric|goederencode|douanecode/.test(t);
+  const docW=/dokument|papiere|unterlagen|document|papiers|documentos|documenten|pr[äa]ferenz|ursprung|origin|origine|origen|oorsprong|eur\.?1|a\.?tr\b|eori|ausfuhranmeldung|mrn|export declaration|d[ée]claration d.export|declaraci[oó]n de exportaci|exportaangifte/.test(t);
+  const cc=findCustomsCountry(tClean);
+  const prod=pid||lastProduct;
+  if(hsW){
+    if(prod){lastProduct=prod; return x.hs(PRODUCTS[prod].name,HS[prod].code,HS[prod].d[lang]);}
+    return x.hsAll+'\n'+Object.entries(PRODUCTS).map(([id,p])=>`– ${p.name}: ${HS[id].code}`).join('\n');
+  }
+  if(docW&&(cc||zollW||/brauch|ben[öo]tig|need|besoin|faut|necesit|nodig/.test(t))){
+    if(!cc) return x.docs.gen;
+    if(COUNTRIES[cc]&&COUNTRIES[cc].eu) return x.docs.eu(cName(cc));
+    return x.docs[CUS[cc].pref](cName(cc));
+  }
+  const nonEU=cc&&CUS[cc];
+  const calcW=/wie ?viel|wieviel|how much|combien|cu[aá]nto|hoeveel|berechn|rechne|calcul|bereken|kosten|cost|co[uû]t|coste|landed/.test(t);
+  if(zollW&&nonEU&&prod&&(pid||qty||calcW||lastCtx==='customs')){
+    const q2=qty||lastQty||10; const r=showCustoms(prod,q2,cc); const C=CUS[cc];
+    return x.calc(q2,PRODUCTS[prod].name,cName(cc),eur(r.charges),eur(r.landed),num(r.rate,1),num(C.vat,1))+x.prefSent[C.pref]+x.tail;
+  }
+  if(zollW&&nonEU&&!COUNTRIES[cc]){
+    const C=CUS[cc]; const rates=Object.keys(PRODUCTS).map(id=>C.pref==='none'?(C.duty[id]||0):0);
+    const lo=Math.min(...rates), hi=Math.max(...rates), range=lo===hi?`${lo} %`:`${lo}–${hi} %`;
+    return x.country(cName(cc),x.pref[C.pref],C.vat,lang==='en'||lang==='nl'?range.replace(' %','%'):range,cc);
+  }
+  if(/einfuhr|import|invoer/.test(t)&&!cc&&!pid) return x.imp;
+  return null;
+}
+
+
+// ---------------- Einfuhr IN die EU (Drittland → EU) und innergemeinschaftlicher Erwerb ----------------
+const EU_DUTY={probook:0,ergoflex:2.7,viewmax:0,soundcall:2,deskdock:0};
+const FROM_FREIGHT={US:[350,3.5],CN:[420,4.0],GB:[85,1.0],CH:[70,.9],NO:[90,1.0],TR:[140,1.4],JP:[460,4.2],AE:[300,3.0]};
+function originCountry(t){
+  const art='(der |den |dem |the |la |le |l\'|el |los |las |les |het |de )?';
+  const all=Object.assign({},ALIASES,CUS_ALIASES);
+  for(const [code,al] of Object.entries(all)) for(const a of al){
+    if(new RegExp('(^|[^a-zäöüßáéíóúñ])(aus|von|from|depuis|desde|uit|van|de|du|des|d\')\\s*'+art+a+'($|[^a-zäöüßáéíóúñ])').test(t)) return code;
+  }
+  return null;
+}
+function importCalc(pid,qty,origin,dest,amount){
+  const p=pid?PRODUCTS[pid]:null;
+  const goods=amount||r2((p?p.price/1.19:100)*qty);
+  const w=p?p.weight*qty:goods/100;
+  const fr=FROM_FREIGHT[origin]||[200,2]; const freight=r2(fr[0]+fr[1]*w); const ins=Math.max(5,r2(goods*1.1*0.003));
+  const value=r2(goods+freight+ins);
+  const base=p?EU_DUTY[pid]:2; const pref=(CUS[origin]||{}).pref||'none';
+  const rate=pref==='none'?base:0;
+  const duty=r2(value*rate/100); const vatRate=COUNTRIES[dest].vat||19; const eust=r2((value+duty)*vatRate/100);
+  const fee=45; return {goods,freight,ins,value,base,rate,duty,vatRate,eust,fee,cash:r2(duty+fee),total:r2(duty+eust+fee),landed:r2(value+duty+fee),pref};
+}
+const IMX={
+ de:{title:'Einfuhr in die EU – Abgabenberechnung',origin:'Herkunftsland',dest:'Einfuhr nach',prefL:'Präferenz',goods:'Warenwert (Rechnung Lieferant)',freight:'Fracht bis EU-Grenze',ins:'Versicherung',value:'Zollwert (CIF)',duty:'Zoll (EU-Zolltarif)',eust:'Einfuhrumsatzsteuer',fee:'Zollanmeldung (ATLAS) / Spediteur',total:'Einfuhrabgaben gesamt',landed:'Einstandskosten ohne EUSt.',
+  note:'Die Einfuhrumsatzsteuer kannst du als Unternehmen als Vorsteuer zurückholen – echte Kosten sind also Zoll und Abfertigung. Vereinfachte Berechnung, alle Sätze sind Annahmen.',
+  ans:(lab,o,d,eust,cash,rate,vr,pref)=>`Einfuhr von ${lab} aus ${o} nach ${d}: Zoll ${rate} %${pref}, Einfuhrumsatzsteuer ${vr} % (${eust}). Als Unternehmen bekommst du die EUSt als Vorsteuer zurück – echte Kosten sind also nur Zoll und Abfertigung: ${cash}.`,
+  pref:{pref:' dank Präferenzabkommen (Ursprungserklärung des Lieferanten nötig)',atr:' dank Zollunion (A.TR nötig)',none:''},
+  docs:o=>`Für die Einfuhr aus ${o} brauchst du: Handelsrechnung des Lieferanten, Packliste, Frachtpapier (Luftfrachtbrief oder B/L), deine EORI-Nummer und die Zollanmeldung über ATLAS (macht meist der Spediteur). Bei Präferenzware zusätzlich den Ursprungsnachweis. Zoll und Einfuhrumsatzsteuer werden vor der Freigabe fällig.`,
+  ige:(o)=>`Lieferung aus ${o} ist ein innergemeinschaftlicher Erwerb: kein Zoll, keine Zollanmeldung. Der Lieferant stellt eine Nettorechnung mit beiden USt-IdNrn. aus („Steuerfreie innergemeinschaftliche Lieferung“), und du meldest die Erwerbsteuer (in DE 19 %) selbst an – die kannst du direkt als Vorsteuer wieder abziehen. Unterm Strich also kostenneutral. 🙂`,
+  askProd:o=>`Gern rechne ich die Einfuhr aus ${o} aus! Um welche Ware geht es und wie viele Stück (oder welcher Warenwert)?`},
+ en:{title:'Import into the EU – charges',origin:'Country of origin',dest:'Imported into',prefL:'Preference',goods:'Goods value (supplier invoice)',freight:'Freight to EU border',ins:'Insurance',value:'Customs value (CIF)',duty:'Duty (EU tariff)',eust:'Import VAT',fee:'Customs declaration (ATLAS) / forwarder',total:'Total import charges',landed:'Landed cost excl. import VAT',
+  note:'As a business you can reclaim import VAT as input tax – the real costs are duty and clearance. Simplified calculation; all rates are assumptions.',
+  ans:(lab,o,d,eust,cash,rate,vr,pref)=>`Importing ${lab} from ${o} into ${d}: duty ${rate}%${pref}, import VAT ${vr}% (${eust}). As a business you reclaim import VAT as input tax – so your real cost is just duty and clearance: ${cash}.`,
+  pref:{pref:' thanks to a preferential agreement (supplier origin statement needed)',atr:' thanks to the customs union (A.TR needed)',none:''},
+  docs:o=>`To import from ${o} you need: the supplier's commercial invoice, packing list, transport document (air waybill or B/L), your EORI number and the customs declaration via ATLAS (usually filed by the forwarder). For preferential goods, also proof of origin. Duty and import VAT are due before release.`,
+  ige:o=>`A delivery from ${o} is an intra-EU acquisition: no customs duty, no customs declaration. The supplier issues a net invoice with both VAT IDs ("tax-exempt intra-community supply"), and you self-assess the acquisition VAT (19% in Germany) – which you deduct straight away as input tax. So it's cost-neutral. 🙂`,
+  askProd:o=>`Happy to calculate the import from ${o}! Which goods and how many units (or what goods value)?`},
+ fr:{title:"Importation dans l'UE – taxes",origin:"Pays d'origine",dest:'Importé en',prefL:'Préférence',goods:'Valeur marchandise (facture fournisseur)',freight:"Fret jusqu'à la frontière UE",ins:'Assurance',value:'Valeur en douane (CIF)',duty:'Droits (tarif UE)',eust:"TVA à l'importation",fee:'Déclaration en douane / transitaire',total:"Total des taxes à l'importation",landed:'Coût de revient hors TVA import',
+  note:"En tant qu'entreprise, tu récupères la TVA à l'importation – les vrais coûts sont les droits et le dédouanement. Calcul simplifié, taux supposés.",
+  ans:(lab,o,d,eust,cash,rate,vr,pref)=>`Importation de ${lab} depuis ${o} vers ${d} : droits ${rate} %${pref}, TVA à l'importation ${vr} % (${eust}). En entreprise, tu récupères cette TVA – le vrai coût, ce sont les droits et le dédouanement : ${cash}.`,
+  pref:{pref:" grâce à un accord préférentiel (déclaration d'origine du fournisseur requise)",atr:' grâce à l’union douanière (A.TR requis)',none:''},
+  docs:o=>`Pour importer depuis ${o}, il te faut : facture commerciale du fournisseur, liste de colisage, document de transport (LTA ou B/L), ton numéro EORI et la déclaration en douane (en général faite par le transitaire). Pour les marchandises préférentielles, aussi la preuve d'origine. Droits et TVA sont dus avant la mainlevée.`,
+  ige:o=>`Une livraison depuis ${o} est une acquisition intracommunautaire : pas de douane, pas de déclaration. Le fournisseur facture HT avec les deux numéros de TVA, et tu autoliquides la TVA (19 % en Allemagne) que tu déduis aussitôt. Donc neutre en coût. 🙂`,
+  askProd:o=>`Je calcule volontiers l'importation depuis ${o} ! Quelle marchandise et combien d'unités (ou quelle valeur) ?`},
+ es:{title:'Importación a la UE – gravámenes',origin:'País de origen',dest:'Importado a',prefL:'Preferencia',goods:'Valor de la mercancía (factura proveedor)',freight:'Flete hasta la frontera UE',ins:'Seguro',value:'Valor en aduana (CIF)',duty:'Arancel (arancel UE)',eust:'IVA de importación',fee:'Declaración aduanera / transitario',total:'Total gravámenes de importación',landed:'Coste en destino sin IVA import.',
+  note:'Como empresa recuperas el IVA de importación como IVA soportado – los costes reales son arancel y despacho. Cálculo simplificado, tipos supuestos.',
+  ans:(lab,o,d,eust,cash,rate,vr,pref)=>`Importar ${lab} desde ${o} a ${d}: arancel ${rate} %${pref}, IVA de importación ${vr} % (${eust}). Como empresa recuperas ese IVA, así que el coste real es arancel y despacho: ${cash}.`,
+  pref:{pref:' gracias a un acuerdo preferencial (declaración de origen del proveedor)',atr:' gracias a la unión aduanera (A.TR necesario)',none:''},
+  docs:o=>`Para importar desde ${o} necesitas: factura comercial del proveedor, lista de embalaje, documento de transporte (AWB o B/L), tu número EORI y la declaración aduanera (normalmente la hace el transitario). Si hay preferencia, también la prueba de origen. Arancel e IVA se pagan antes del levante.`,
+  ige:o=>`Un envío desde ${o} es una adquisición intracomunitaria: sin aduana ni declaración. El proveedor factura sin IVA con ambos NIF-IVA y tú autoliquidas el IVA (19 % en Alemania), que te deduces en el acto. Coste neutro. 🙂`,
+  askProd:o=>`¡Te calculo la importación desde ${o}! ¿Qué mercancía y cuántas unidades (o qué valor)?`},
+ nl:{title:'Invoer in de EU – heffingen',origin:'Land van oorsprong',dest:'Ingevoerd in',prefL:'Preferentie',goods:'Goederenwaarde (factuur leverancier)',freight:'Vracht tot EU-grens',ins:'Verzekering',value:'Douanewaarde (CIF)',duty:'Invoerrecht (EU-tarief)',eust:'Invoer-btw',fee:'Douaneaangifte / expediteur',total:'Totaal invoerheffingen',landed:'Kostprijs excl. invoer-btw',
+  note:'Als bedrijf kun je de invoer-btw als voorbelasting terugvragen – echte kosten zijn invoerrecht en inklaring. Vereenvoudigde berekening, aangenomen tarieven.',
+  ans:(lab,o,d,eust,cash,rate,vr,pref)=>`Invoer van ${lab} uit ${o} naar ${d}: invoerrecht ${rate}%${pref}, invoer-btw ${vr}% (${eust}). Als bedrijf vraag je die btw terug – echte kosten zijn dus alleen invoerrecht en inklaring: ${cash}.`,
+  pref:{pref:' dankzij een preferentieel akkoord (oorsprongsverklaring leverancier nodig)',atr:' dankzij de douane-unie (A.TR nodig)',none:''},
+  docs:o=>`Voor invoer uit ${o} heb je nodig: handelsfactuur van de leverancier, paklijst, vervoersdocument (luchtvrachtbrief of B/L), je EORI-nummer en de douaneaangifte (meestal door de expediteur). Bij preferentiële goederen ook het oorsprongsbewijs. Invoerrecht en btw zijn verschuldigd vóór vrijgave.`,
+  ige:o=>`Een levering uit ${o} is een intracommunautaire verwerving: geen douane, geen aangifte. De leverancier factureert zonder btw met beide btw-nummers, en jij verlegt de btw (19% in Duitsland) die je meteen weer aftrekt. Kostenneutraal dus. 🙂`,
+  askProd:o=>`Ik reken de invoer uit ${o} graag uit! Om welke goederen gaat het en hoeveel stuks (of welke waarde)?`}
+};
+const IMX_AMT={de:v=>`Ware im Wert von ${v}`,en:v=>`goods worth ${v}`,fr:v=>`marchandises d'une valeur de ${v}`,es:v=>`mercancía por valor de ${v}`,nl:v=>`goederen ter waarde van ${v}`};
+function importHandler(text,t,tClean,pid,qty){
+  const o=originCountry(tClean); if(!o) return null;
+  const relevant=/zoll|einfuhr|import|douane|customs|dut(y|ies)|aduana|arancel|invoer|abgaben|droits|bestell|kauf|bezieh|order|buy|achet|commande|compr|pedido|bestel|koop|liefer|deliver|livr|env[ií]|lever|steuer|tax|tva|iva|btw|dokument|document|papier/.test(t);
+  if(!relevant) return null;
+  const x=IMX[lang]; const oName=cName(o);
+  if(COUNTRIES[o]&&COUNTRIES[o].eu) return x.ige(oName);
+  if(/dokument|papiere|unterlagen|document|papiers|documentos|documenten|brauch|need|besoin|necesit|nodig/.test(t)&&!qty) return x.docs(oName);
+  const am=text.match(/(\d{1,3}(?:[.\s]\d{3})+|\d+)(?:[,.]\d+)?\s?(€|eur|euro)/i); const amount=am?parseFloat(am[1].replace(/[.\s]/g,'')):null;
+  const prod=pid||(amount?null:lastProduct);
+  if(!prod&&!amount) return x.askProd(oName);
+  const dest=(lastCountry&&COUNTRIES[lastCountry]&&COUNTRIES[lastCountry].eu)?lastCountry:(SIM.byLang[lang]&&COUNTRIES[SIM.byLang[lang]].eu?SIM.byLang[lang]:'DE');
+  const q2=qty&&(!amount||qty!==amount)?qty:(lastQty||10);
+  const r=importCalc(prod,q2,o,dest,amount);
+  const t2=T(), I=t2.inv, pName=prod?PRODUCTS[prod].name:'—';
+  docCard('customs',`🛃 ${x.title}`,[[x.origin,oName],[x.dest,t2.c[dest]],[x.prefL,CX[lang].pref[r.pref]]],
+    {head:['HS',I.item,I.qty,I.total],body:[[prod?HS[prod].code:'—',pName,amount&&!prod?'—':q2+'×',eur(r.goods)]]},
+    [[x.goods,eur(r.goods)],[x.freight,eur(r.freight)],[x.ins,eur(r.ins)],[x.value,eur(r.value)],[`${x.duty} ${num(r.rate,1)} %`+(r.base&&!r.rate?` (${num(r.base,1)} %)`:''),eur(r.duty)],[`${x.eust} ${num(r.vatRate,1)} %`,eur(r.eust)],[x.fee,eur(r.fee)],[x.total,eur(r.total),true],[x.landed,eur(r.landed)]],
+    [x.note],x.title,`Einfuhr_${o}_${dest}`);
+  if(prod){lastProduct=prod; lastQty=q2;}
+  const lab=amount&&!prod?IMX_AMT[lang](eur(amount)):`${q2}× ${pName}`;
+  return x.ans(lab,oName,t2.c[dest],eur(r.eust),eur(r.cash),num(r.rate,1),num(r.vatRate,1),x.pref[r.pref])+CX[lang].tail;
+}
+
+// ---------------- Mitarbeiter: Weiterleitung mit Telefonnummer und Wartezeit ----------------
+const STAFF=[
+  {key:'zoll',re:/zoll|customs|douane|aduana|douane|export|import|einfuhr|ausfuhr|incoterm|invoer/,n:'Mehmet Yılmaz',tel:'+49 40 2468 1360',role:{de:'Zoll & Export',en:'Customs & Export',fr:'Douane & Export',es:'Aduanas y Exportación',nl:'Douane & Export'}},
+  {key:'rech',re:/rechnung|invoice|facture|factura|factuur|zahlung|payment|paiement|pago|betaling|skonto/,n:'Julia Weber',tel:'+49 40 2468 1370',role:{de:'Rechnungen & Buchhaltung',en:'Invoicing & Accounting',fr:'Facturation & Comptabilité',es:'Facturación y Contabilidad',nl:'Facturatie & Boekhouding'}},
+  {key:'log',re:/liefer|paket|sendung|versand|parcel|delivery|shipping|livraison|colis|env[ií]o|paquete|levering|pakket|verzending/,n:'Tom Becker',tel:'+49 40 2468 1380',role:{de:'Logistik & Versand',en:'Logistics & Shipping',fr:'Logistique & Expédition',es:'Logística y Envíos',nl:'Logistiek & Verzending'}},
+  {key:'b2b',re:/.*/,n:'Lena Hoffmann',tel:'+49 40 2468 1350',role:{de:'B2B-Kundenservice',en:'B2B Customer Service',fr:'Service client B2B',es:'Atención al cliente B2B',nl:'B2B-klantenservice'}}
+];
+const HO={
+ de:(s,tk,w)=>`Klar, ich leite dich weiter! 📞 Dein Ansprechpartner ist ${s.n} (${s.role.de}), direkt erreichbar unter ${s.tel}. Gerade ist viel los – die Wartezeit liegt bei ca. ${w} Minuten. Ich hab ${s.n.split(' ')[0]} schon eine Zusammenfassung geschickt (Ticket ${tk}), du musst also nichts doppelt erklären. Erreichbar Mo–Fr 8–18 Uhr.`,
+ en:(s,tk,w)=>`Sure, I'm putting you through! 📞 Your contact is ${s.n} (${s.role.en}), direct line ${s.tel}. It's busy right now – the waiting time is about ${w} minutes. I've already sent ${s.n.split(' ')[0]} a summary (ticket ${tk}), so you won't have to explain everything again. Available Mon–Fri, 8 am–6 pm.`,
+ fr:(s,tk,w)=>`Bien sûr, je te transfère ! 📞 Ton interlocuteur est ${s.n} (${s.role.fr}), ligne directe ${s.tel}. Il y a du monde en ce moment – l'attente est d'environ ${w} minutes. J'ai déjà envoyé un résumé à ${s.n.split(' ')[0]} (ticket ${tk}), tu n'auras rien à répéter. Joignable du lundi au vendredi de 8 h à 18 h.`,
+ es:(s,tk,w)=>`¡Claro, te paso! 📞 Tu contacto es ${s.n} (${s.role.es}), línea directa ${s.tel}. Ahora hay bastante movimiento: la espera es de unos ${w} minutos. Ya le he enviado un resumen a ${s.n.split(' ')[0]} (ticket ${tk}), así no tendrás que repetir nada. Disponible de lunes a viernes de 8 a 18 h.`,
+ nl:(s,tk,w)=>`Natuurlijk, ik verbind je door! 📞 Je contactpersoon is ${s.n} (${s.role.nl}), direct bereikbaar op ${s.tel}. Het is nu druk – de wachttijd is ongeveer ${w} minuten. Ik heb ${s.n.split(' ')[0]} al een samenvatting gestuurd (ticket ${tk}), dus je hoeft niets opnieuw uit te leggen. Bereikbaar ma–vr 8–18 uur.`
+};
+const HO_CARD={de:['Weitergeleitet an','Telefon','Wartezeit','ca. %w Min.'],en:['Transferred to','Phone','Waiting time','approx. %w min'],fr:['Transféré à','Téléphone','Attente','env. %w min'],es:['Transferido a','Teléfono','Espera','aprox. %w min'],nl:['Doorverbonden met','Telefoon','Wachttijd','ca. %w min']};
+function staffHandoff(text){
+  const cur=text.toLowerCase(), prev=history.filter(h=>h.role==='user').slice(-4,-1).map(h=>h.content).join(' ').toLowerCase();
+  const s=STAFF.slice(0,3).find(x=>x.re.test(cur))||STAFF.slice(0,3).find(x=>x.re.test(prev))||STAFF[3];
+  const w=[5,10,10,15][Math.floor(Math.random()*4)];
+  const tk="TK-"+Math.floor(10000+Math.random()*89999);
+  const L=HO_CARD[lang]; const d=el('div','handoff');
+  d.appendChild(el('b',null,`👤 ${L[0]} ${s.n} · ${s.role[lang]}`));
+  d.appendChild(document.createTextNode(`📞 ${L[1]}: ${s.tel}  ·  ⏱ ${L[2]}: ${L[3].replace('%w',w)}  ·  ${tk}`));
+  log.appendChild(d); scroll();
+  return HO[lang](s,tk,w);
+}
+
+// ---------------- Mengenrabatt konkret ----------------
+const DSC={
+ de:(q,d,nx,nd,p,u,ud,sv)=>`Bei ${q} Stück bekommst du ${d} % Mengenrabatt${p?` – beim ${p} sinkt der Stückpreis von ${u} auf ${ud} netto, du sparst also ${sv}`:''}.${nx?` Ab ${nx} Stück wären es sogar ${nd} %.`:' Das ist schon unsere höchste Stufe.'} Dazu kommen 2 % Skonto bei Zahlung innerhalb von 10 Tagen. Soll ich dir direkt ein Angebot machen?`,
+ en:(q,d,nx,nd,p,u,ud,sv)=>`For ${q} units you get a ${d}% volume discount${p?` – the ${p} drops from ${u} to ${ud} net per unit, so you save ${sv}`:''}.${nx?` From ${nx} units it would even be ${nd}%.`:" That's already our top tier."} Plus a 2% early-payment discount within 10 days. Shall I create a quote right away?`,
+ fr:(q,d,nx,nd,p,u,ud,sv)=>`Pour ${q} unités, tu as ${d} % de remise quantité${p?` – le ${p} passe de ${u} à ${ud} HT l'unité, soit ${sv} d'économie`:''}.${nx?` Dès ${nx} unités, ce serait même ${nd} %.`:" C'est déjà notre palier maximum."} En plus, 2 % d'escompte pour paiement sous 10 jours. Je te fais un devis ?`,
+ es:(q,d,nx,nd,p,u,ud,sv)=>`Con ${q} unidades tienes un ${d} % de descuento por volumen${p?`: el ${p} baja de ${u} a ${ud} netos por unidad, ahorras ${sv}`:''}.${nx?` Desde ${nx} unidades sería incluso un ${nd} %.`:' Ya es nuestro tramo máximo.'} Además, 2 % por pronto pago en 10 días. ¿Te preparo un presupuesto?`,
+ nl:(q,d,nx,nd,p,u,ud,sv)=>`Bij ${q} stuks krijg je ${d}% staffelkorting${p?` – de ${p} gaat van ${u} naar ${ud} netto per stuk, je bespaart dus ${sv}`:''}.${nx?` Vanaf ${nx} stuks is het zelfs ${nd}%.`:' Dat is al onze hoogste staffel.'} Plus 2% betalingskorting binnen 10 dagen. Zal ik meteen een offerte maken?`
+};
+function discountAnswer(q,pid){
+  const d=discountFor(q); const next=[...TIERS].reverse().find(([n])=>n>q);
+  if(!d&&!next) return null;
+  let p=null,u,ud,sv; if(pid){const P=PRODUCTS[pid]; const unit=r2(P.price/1.19); p=P.name; u=eur(unit); ud=eur(r2(unit*(1-d/100))); sv=eur(r2(unit*d/100*q)); lastProduct=pid;}
+  lastQty=q;
+  return DSC[lang](q,d,next?next[0]:null,next?next[1]:null,p,u,ud,sv);
+}
+
+// ---------------- Fallbezogene Rechnungen (B2B / B2C / Export) ----------------
+let isB2B=false;
+const VATID={DE:'DE 812 345 678',FR:'FR 27 123456789',ES:'ESB12345678',PL:'PL 5261234567',NL:'NL 123456789 B01'};
+const INVX={
+ de:{b2bDE:'Leistungsempfänger ist Unternehmer.',rc:'Steuerfreie innergemeinschaftliche Lieferung (§ 4 Nr. 1b UStG) – Steuerschuldnerschaft des Leistungsempfängers (Reverse Charge).',exp:mrn=>`Steuerfreie Ausfuhrlieferung (§ 4 Nr. 1a UStG). Ausfuhrnachweis: MRN ${mrn}.`,ourVat:'Unsere USt-IdNr.',custVat:'USt-IdNr. Kunde',caseL:'Fall',cases:{dom:'Inland (DE)',oss:'EU-Privatkunde (OSS)',ige:'Innergemeinschaftliche Lieferung (B2B)',exp:'Ausfuhr Drittland'}},
+ en:{b2bDE:'Recipient is a business.',rc:'Tax-exempt intra-community supply – reverse charge, VAT payable by the recipient.',exp:mrn=>`Tax-exempt export delivery. Proof of export: MRN ${mrn}.`,ourVat:'Our VAT ID',custVat:'Customer VAT ID',caseL:'Case',cases:{dom:'Domestic (DE)',oss:'EU consumer (OSS)',ige:'Intra-community supply (B2B)',exp:'Export to third country'}},
+ fr:{b2bDE:'Le destinataire est une entreprise.',rc:'Livraison intracommunautaire exonérée – autoliquidation par le preneur.',exp:mrn=>`Livraison à l'exportation exonérée. Preuve d'export : MRN ${mrn}.`,ourVat:'Notre n° TVA',custVat:'N° TVA client',caseL:'Cas',cases:{dom:'National (DE)',oss:'Particulier UE (OSS)',ige:'Livraison intracommunautaire (B2B)',exp:'Export pays tiers'}},
+ es:{b2bDE:'El destinatario es empresario.',rc:'Entrega intracomunitaria exenta – inversión del sujeto pasivo.',exp:mrn=>`Entrega de exportación exenta. Prueba de exportación: MRN ${mrn}.`,ourVat:'Nuestro NIF-IVA',custVat:'NIF-IVA cliente',caseL:'Caso',cases:{dom:'Nacional (DE)',oss:'Particular UE (OSS)',ige:'Entrega intracomunitaria (B2B)',exp:'Exportación a tercer país'}},
+ nl:{b2bDE:'Ontvanger is ondernemer.',rc:'Vrijgestelde intracommunautaire levering – btw verlegd naar de afnemer.',exp:mrn=>`Vrijgestelde exportlevering. Exportbewijs: MRN ${mrn}.`,ourVat:'Ons btw-nummer',custVat:'Btw-nummer klant',caseL:'Geval',cases:{dom:'Binnenland (DE)',oss:'EU-particulier (OSS)',ige:'Intracommunautaire levering (B2B)',exp:'Export derde land'}}
+};
+function makeInvoice(id){
+  const o=ORDERS[id], t=T(), I=t.inv, X=INVX[lang], C=COUNTRIES[o.land];
+  const b2b=o.sim?o.b2b:(isB2B||o.b2b);
+  const kase=!C.eu?'exp':(o.land==='DE'?'dom':(b2b?'ige':'oss'));
+  const netPrices=kase==='exp'||kase==='ige';
+  const lines=o.items.map(i=>{const p=PRODUCTS[i.p];const unit=netPrices?r2(p.price/1.19):p.price;return {name:p.name,q:i.q,unit,sum:r2(unit*i.q)};});
+  const goods=lines.reduce((a,l)=>a+l.sum,0);
+  const listPrice=o.items.reduce((a,i)=>a+PRODUCTS[i.p].price*i.q,0);
+  let ship=(C.free&&listPrice>=C.free)?0:C.ship; if(netPrices) ship=r2(ship/1.19);
+  let net,vat,gross,rate;
+  if(netPrices){net=r2(goods+ship);vat=0;gross=net;rate=0;}
+  else{rate=o.land==='DE'?19:C.vat;gross=r2(goods+ship);net=r2(gross/(1+rate/100));vat=r2(gross-net);}
+  const nr='RE-'+o.ordered.slice(0,4)+'-'+id.replace(/[^A-Z0-9]/gi,'').slice(-6);
+  const meta=[[I.date,fmtDate(o.ordered,true)],[I.order,id],[I.to,`${o.name}${b2b?' GmbH':''}, ${o.addr}, ${t.c[o.land]}`],[X.caseL,X.cases[kase]],[X.ourVat,'DE 298 765 432']];
+  if(b2b&&VATID[o.land]) meta.push([X.custVat,VATID[o.land]]);
+  const notes=[I.paid(o.pay)+' ✓'];
+  if(kase==='exp') notes.push(X.exp('26DE'+String(hashStr(id)).padStart(10,'0').slice(0,10)+'A'+String(hashStr(id+'m')%10)));
+  if(kase==='ige') notes.push(X.rc);
+  if(kase==='oss') notes.push(I.oss);
+  if(kase==='dom'&&b2b) notes.push(X.b2bDE);
+  docCard('invoice',`🧾 ${I.title} ${I.no} ${nr}`,meta,
+    {head:[I.qty,I.item,'€',I.total],body:[...lines.map(l=>[l.q+'×',l.name,eur(l.unit),eur(l.sum)]),['',I.ship,'',ship===0?I.free:eur(ship)]]},
+    [[I.net,eur(net)],[`${I.vat} ${rate} %`,eur(vat)],[I.gross,eur(gross),true]],notes,I.save,`Rechnung_${nr}`);
+}
+
 // ---------------- Tools für den KI-Modus ----------------
 const TOOLS=[
   {name:'bestellung_abrufen',description:'Ruft eine Bestellung ab (JEDE Bestellnummer und E-Mail funktioniert – unbekannte Bestellungen werden realistisch simuliert), zeigt die Sendungskarte und fragt automatisch beim Spediteur nach (Antwort kommt nach wenigen Sekunden von selbst).',
@@ -1012,9 +1327,15 @@ const TOOLS=[
   {name:'incoterms_vergleich',description:'Berechnet den Nettopreis für alle Incoterms (EXW, FCA, CPT, CIP, DAP, DPU, DDP) für Produkt, Menge und Land, zeigt eine Vergleichstabelle im Chat und liefert die Kostenposten je Klausel.',
    inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)},menge:{type:'integer'},land:{type:'string',enum:Object.keys(COUNTRIES)},hervorheben:{type:'array',items:{type:'string',enum:TERMS}}},required:['produkt','menge','land']},
    execute:({produkt,menge,land,hervorheben})=>{if(!PRODUCTS[produkt]||!COUNTRIES[land]) return {fehler:'Produkt oder Land unbekannt'}; showIncoTable(produkt,menge||10,land,hervorheben||[]); return Object.fromEntries(TERMS.map(x=>{const r=incoCalc(produkt,menge||10,land,x);return [x,{gesamt_netto:r.total,kostenposten:r.lines}];}));}},
-  {name:'an_mitarbeiter_uebergeben',description:'Übergibt an einen menschlichen Mitarbeiter (Ticket).',
-   inputSchema:{type:'object',properties:{zusammenfassung:{type:'string'},prioritaet:{type:'string',enum:['normal','hoch']}},required:['zusammenfassung']},
-   execute:({zusammenfassung,prioritaet})=>({ticket:handoff(zusammenfassung,prioritaet),info:KB.kontakt})}
+  {name:'an_mitarbeiter_uebergeben',description:'Leitet an einen Mitarbeiter weiter: zeigt Name, Durchwahl und Wartezeit an und liefert einen fertigen Text mit diesen Angaben (diesen Text dem Kunden in seiner Sprache weitergeben).',
+   inputSchema:{type:'object',properties:{zusammenfassung:{type:'string'}},required:['zusammenfassung']},
+   execute:({zusammenfassung})=>({text_fuer_kunden:staffHandoff(zusammenfassung)})},
+  {name:'zoll_ausfuhr_berechnen',description:'Berechnet Zoll und Einfuhrabgaben, wenn GlobalTrade24 Ware in ein Nicht-EU-Land liefert (CH, GB, NO, TR, US, CN, JP, AE), und zeigt die Berechnung als Beleg.',
+   inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)},menge:{type:'integer'},land:{type:'string',enum:Object.keys(CUS)}},required:['produkt','menge','land']},
+   execute:({produkt,menge,land})=>{if(!PRODUCTS[produkt]||!CUS[land]) return {fehler:'unbekannt'}; return showCustoms(produkt,menge||10,land);}},
+  {name:'einfuhr_in_eu_berechnen',description:'Berechnet Zoll und Einfuhrumsatzsteuer, wenn ein Kunde Ware AUS einem Drittland (US, CN, GB, CH, NO, TR, JP, AE) in die EU einführt, und zeigt die Berechnung.',
+   inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)},menge:{type:'integer'},herkunft:{type:'string',enum:Object.keys(FROM_FREIGHT)},warenwert_eur:{type:'number'}},required:['herkunft']},
+   execute:({produkt,menge,herkunft,warenwert_eur})=>{const o={US:'usa',CN:'china',GB:'england',CH:'schweiz',NO:'norwegen',TR:'türkei',JP:'japan',AE:'vae'}[herkunft]||'usa'; const txt=importHandler(`Einfuhr ${warenwert_eur?warenwert_eur+' €':''} aus ${o}`,'einfuhr aus '+o,'aus '+o,produkt||null,menge||null); return {ergebnis:txt};}}
 ];
 
 // ---------------- Regelbasierter Modus (ohne KI) ----------------
@@ -1029,7 +1350,8 @@ function fallback(text){
   const wantsQuote=/angebot|offer|quote|devis|presupuesto|cotizaci|offerte/.test(t);
   const qtyM=tClean.replace(/12-in-1|probook 14( air)?|viewmax 27( usb-c)?|incoterms?®? ?2020|\d[\d.,]*\s?(€|eur|euro)/g,' ').match(/(\d{1,4})/); const qty=qtyM?parseInt(qtyM[1],10):null;
 
-  if(/mitarbeiter|mensch|agent|beschwer|conseiller|humain|human|someone|employee|reclam|queja|medewerker|persoonlijk|hablar con/.test(t)){handoff('„'+text+'“');pendingQuote=null;return L.handoff;}
+  if(/b2b|firma|unternehmen|gewerb|ust-?id|vat (id|number)|company|business|entreprise|soci[ée]t[ée]|empresa|bedrijf|zakelijk|btw-nummer|\bnif\b|gmbh|\bltd\b|\bsarl\b/.test(t.replace(/\S+@\S+/g,' '))) isB2B=true;
+  if(/mitarbeiter|mensch|ansprechpartner|telefon|anruf|hotline|r[üu]ckruf|agent|beschwer|conseiller|humain|human|someone|employee|phone|call me|callback|t[ée]l[ée]phone|appeler|reclam|queja|tel[ée]fono|llamar|medewerker|persoonlijk|telefoon|bellen|hablar con/.test(t)){pendingQuote=null;return staffHandoff(text);}
 
   // Rechnung
   if(wantsInvoice||(pendingInvoice&&mail)){
@@ -1042,6 +1364,10 @@ function fallback(text){
   }
   // Incoterms, Mengenrabatte
   {const ia=incoHandler(text,t,tClean,pid,qty,wantsQuote); if(ia) return ia;}
+  // Einfuhr in die EU (aus Drittland / innergemeinschaftlich)
+  {const im=importHandler(text,t,tClean,pid,qty); if(im) return im;}
+  // Zoll & Ausfuhr in Drittländer
+  if(!wantsQuote){const cu=customsHandler(t,tClean,pid,qty); if(cu) return cu;}
   // Angebot
   if(wantsQuote||(pendingQuote&&qty&&!oid)){
     const p2=pid||pendingQuote||(wantsQuote?lastProduct:null);
@@ -1112,7 +1438,7 @@ function setMode(){ modeEl.textContent=sample?'KI aktiv':(apiKey?'KI aktiv (Clau
 
 // ---------------- Begrüßung ----------------
 function greet(){
-  session++; history=[];verified=new Set();asked=new Set();lastId=null;lastProduct=null;pendingQuote=null;pendingInvoice=false;lastQty=null;lastCountry=null;lastTerm=null;pendingInco=null;lang='de';log.innerHTML='';
+  session++; history=[];verified=new Set();asked=new Set();lastId=null;lastProduct=null;pendingQuote=null;pendingInvoice=false;isB2B=false;lastCtx=null;lastQty=null;lastCountry=null;lastTerm=null;pendingInco=null;lang='de';log.innerHTML='';
   {const lg=document.getElementById('lang');if(lg)lg.textContent='–';} presence.textContent='online';
   log.appendChild(el('div','day','Heute'));
   noticeEl=el('p','notice',noticeText()); log.appendChild(noticeEl);

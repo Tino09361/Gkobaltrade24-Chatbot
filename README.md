@@ -12,6 +12,9 @@ Schulprojekt im Fach Wirtschaftsinformatik – Außenhandel, BS:WI Hamburg.
 - Erklärt die 5 Bestseller mit Datenblatt
 - **Jede beliebige Bestellnummer und E-Mail funktioniert** – der Bot simuliert passende Sendungsdaten (Land wird aus der E-Mail-Endung abgeleitet)
 - **Incoterms® 2020** (EXW, FCA, CPT, CIP, DAP, DPU, DDP): Erklärung, Preisvergleich mit Kostenaufschlüsselung und Risikoübergang
+- **Zoll & Einfuhr**: HS-Codes, Zoll/Einfuhrabgaben bei Ausfuhr (CH, GB, NO, TR, USA, China, Japan, VAE), Einfuhr aus Drittländern in die EU (z. B. USA, China) inkl. EUSt., innergemeinschaftlicher Erwerb, Dokumente (MRN, EORI, Ursprungserklärung, A.TR)
+- **Fallbezogene Rechnungen**: Inland (19 %), EU-Privatkunde (OSS), EU-Firmenkunde (Reverse Charge), Drittland (steuerfreie Ausfuhr mit MRN)
+- **Weiterleitung an Mitarbeiter** mit Name, Telefonnummer und Wartezeit (je nach Thema)
 - **B2B-Mengenrabatte**: ab 5 Stück 5 %, ab 10: 8 %, ab 25: 12 %, ab 50: 15 %, ab 100: 18 %, ab 250: 22 %; 2 % Skonto, frachtfrei in der EU ab 5.000 €
 - Automatische Spracherkennung: Deutsch, Englisch, Französisch, Spanisch, Niederländisch
 - Sendungsverfolgung mit Prüfung von Bestellnummer + E-Mail (Datenschutz)

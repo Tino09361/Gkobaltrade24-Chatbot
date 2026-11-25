@@ -112,6 +112,11 @@
   .reset{font:inherit;font-size:14px;font-weight:600;background:#fff;border:0;border-radius:10px;padding:10px 12px;cursor:pointer;color:var(--bar);width:100%}
   .reset:hover{background:#F2F7F5}
   .foot{margin-top:14px;font-size:12px;color:#4B5955}
+  .ki{margin-top:18px;background:#fff;border-radius:12px;padding:12px}
+  .ki h2{margin-bottom:6px}
+  .ki input,.ki select{width:100%;box-sizing:border-box;font:inherit;font-size:14px;padding:8px 10px;border:1.5px solid #D6DDD9;border-radius:8px;margin:4px 0 8px;background:#fff}
+  .kirow{display:flex;gap:8px}
+  .kirow .reset{background:#E7F3EF}
   #mode{font-weight:600}
 
 
@@ -242,6 +247,14 @@
   </ul>
   <p class="hint">Modus: <span id="mode">verbindet …</span><br>Erkannte Sprache: <b id="lang">–</b></p>
   <button class="reset" id="reset">Chat neu starten</button>
+  <div class="ki" id="kiBox">
+    <h2>Claude-KI aktivieren</h2>
+    <p class="hint" id="kiState"></p>
+    <label for="kiKey" class="hint">Claude-API-Schlüssel (bleibt nur in diesem Browser)</label>
+    <input type="password" id="kiKey" placeholder="sk-ant-…" autocomplete="off">
+    <select id="kiModel" aria-label="Modell"><option value="claude-haiku-5-5">Haiku 5.5 – schnell und günstig</option><option value="claude-sonnet-5-5">Sonnet 5.5 – stärker</option></select>
+    <div class="kirow"><button class="reset" id="kiSave" type="button">KI aktivieren</button><button class="reset" id="kiDel" type="button">Schlüssel entfernen</button></div>
+  </div>
   <p class="foot">Schulprojekt Wirtschaftsinformatik, BS:WI Hamburg. GlobalTrade24 ist ein fiktives Unternehmen, alle Daten sind erfunden.</p>
 </aside>
 
@@ -648,7 +661,7 @@ const TICKS='<svg viewBox="0 0 18 11" aria-label="gelesen"><path d="M1 6l3 3 6-7
 function setText(b,text){b.textContent=text;const m=el('span','meta',now());if(b.closest('.me'))m.insertAdjacentHTML('beforeend',TICKS);b.appendChild(m);}
 function add(who,text){const row=el('div','row '+(who==='me'?'me':'bot'));const b=el('div','bubble');row.appendChild(b);setText(b,text);log.appendChild(row);scroll();return b;}
 function stamp(card){const m=el('div','meta',now());m.style.margin='0 10px 6px';card.appendChild(m);}
-function noticeText(){return sample
+function noticeText(){return (sample||apiKey)
   ?'🤖 Du schreibst mit unserem KI-Service-Bot, nicht mit einem Menschen. Deine Angaben nutzen wir nur für deine Anfrage (DSGVO).'
   :'🤖 Du schreibst mit unserem Service-Bot, nicht mit einem Menschen. Deine Angaben nutzen wir nur für deine Anfrage (DSGVO).';}
 function itemsText(o){return o.items.map(i=>`${PRODUCTS[i.p].name} (${i.q}×)`).join(', ');}
@@ -1064,6 +1077,39 @@ function fallback(text){
   return L.unknown;
 }
 
+
+// ---------------- Claude über die API (Schlüssel nur im Browser des Nutzers) ----------------
+let apiKey=null, apiModel='claude-haiku-5-5';
+try{apiKey=localStorage.getItem('gt24_key')||null; apiModel=localStorage.getItem('gt24_model')||apiModel;}catch(e){}
+function apiMessages(){
+  const out=[];
+  for(const m of history){ if(!out.length&&m.role!=='user') continue;
+    const last=out[out.length-1]; if(last&&last.role===m.role&&typeof last.content==='string') last.content+='\n'+m.content; else out.push({role:m.role,content:m.content}); }
+  return out;
+}
+async function callClaude(){
+  const tools=TOOLS.map(t=>({name:t.name,description:t.description,input_schema:t.inputSchema}));
+  const msgs=apiMessages(); let text='';
+  for(let i=0;i<6;i++){
+    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'content-type':'application/json','x-api-key':apiKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:apiModel,max_tokens:700,system:SYSTEM,messages:msgs,tools})});
+    if(!res.ok){ const err=new Error('api'); err.status=res.status; try{err.detail=(await res.json()).error.message;}catch(e){} throw err; }
+    const data=await res.json();
+    text=data.content.filter(c=>c.type==='text').map(c=>c.text).join('\n').trim()||text;
+    if(data.stop_reason!=='tool_use') return text;
+    msgs.push({role:'assistant',content:data.content});
+    const results=[];
+    for(const c of data.content.filter(c=>c.type==='tool_use')){
+      const tool=TOOLS.find(t=>t.name===c.name); let out;
+      try{out=tool?tool.execute(c.input||{}):{fehler:'Unbekanntes Tool'};}catch(e){out={fehler:String(e.message||e)};}
+      results.push({type:'tool_result',tool_use_id:c.id,content:JSON.stringify(out)});
+    }
+    msgs.push({role:'user',content:results});
+  }
+  return text;
+}
+function setMode(){ modeEl.textContent=sample?'KI aktiv':(apiKey?'KI aktiv (Claude API)':'Demo-Modus'); if(noticeEl) noticeEl.textContent=noticeText(); const st=document.getElementById('kiState'); if(st) st.textContent=apiKey?'✅ Claude ist aktiv ('+(apiModel.includes('sonnet')?'Sonnet':'Haiku')+').':'Ohne Schlüssel antwortet der Bot nach festen Regeln.'; }
+
 // ---------------- Begrüßung ----------------
 function greet(){
   session++; history=[];verified=new Set();asked=new Set();lastId=null;lastProduct=null;pendingQuote=null;pendingInvoice=false;lastQty=null;lastCountry=null;lastTerm=null;pendingInco=null;lang='de';log.innerHTML='';
@@ -1108,6 +1154,10 @@ async function ask(text){
       else if(e&&e.code==='rate_limited'){answer='Gerade ist hier viel los. Probier es bitte in einer Minute nochmal.';}
       if(!answer) answer=fallback(text);
     }
+  } else if(apiKey){
+    try{ answer=await callClaude(); }
+    catch(e){ answer=(e.status===401?'⚠️ Der API-Schlüssel ist ungültig – ich antworte im Demo-Modus.\n\n':(e.status===429||e.status===529?'⚠️ Claude ist gerade ausgelastet – ich antworte im Demo-Modus.\n\n':'⚠️ Claude ist nicht erreichbar – ich antworte im Demo-Modus.\n\n'))+fallback(text); }
+    if(!answer) answer=fallback(text);
   } else { await new Promise(r=>setTimeout(r,700)); answer=fallback(text); }
   setText(b,answer); presence.textContent='online'; history.push({role:'assistant',content:answer});
   scroll(); busy=false; sendBtn.disabled=false; q.focus();
@@ -1116,10 +1166,16 @@ async function ask(text){
 document.getElementById('f').addEventListener('submit',e=>{e.preventDefault();ask(q.value);});
 document.getElementById('chips').addEventListener('click',e=>{if(e.target.classList.contains('chip'))ask(e.target.textContent);});
 document.getElementById('reset').addEventListener('click',greet);
+if(IN_CLAUDE){const kb=document.getElementById('kiBox'); if(kb) kb.remove();}
+else{
+  const km=document.getElementById('kiModel'); km.value=apiModel;
+  document.getElementById('kiSave').addEventListener('click',()=>{const v=document.getElementById('kiKey').value.trim(); if(!v&&!apiKey) return; if(v) apiKey=v; apiModel=km.value; try{localStorage.setItem('gt24_key',apiKey);localStorage.setItem('gt24_model',apiModel);}catch(e){} document.getElementById('kiKey').value=''; setMode();});
+  document.getElementById('kiDel').addEventListener('click',()=>{apiKey=null; try{localStorage.removeItem('gt24_key');}catch(e){} setMode();});
+}
 
 greet();
-modeEl.textContent='Demo-Modus';
-(async()=>{try{if(IN_CLAUDE){const s=await claude.use('sample');if(s){sample=s;modeEl.textContent='KI aktiv';if(noticeEl)noticeEl.textContent=noticeText();}}}catch(e){}})();
+setMode();
+(async()=>{try{if(IN_CLAUDE){const s=await claude.use('sample');if(s){sample=s;setMode();}}}catch(e){}})();
 
 </script>
 </body>

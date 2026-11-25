@@ -130,8 +130,11 @@
   .dmeta dt{color:var(--muted)}
   .dmeta dd{margin:0}
   .dtable{width:100%;border-collapse:collapse}
-  .dtable th{font-weight:600;color:var(--muted);font-size:12px;text-align:left;padding:6px 14px;border-bottom:1px solid #E6E1D6}
-  .dtable td{padding:6px 14px;border-bottom:1px solid #F0ECE3}
+  .dtable{table-layout:auto}
+  .dtable th{font-weight:600;color:var(--muted);font-size:12px;text-align:left;padding:6px 8px;border-bottom:1px solid #E6E1D6}
+  .dtable td{padding:6px 8px;border-bottom:1px solid #F0ECE3;font-size:12.5px}
+  .dtable th:first-child,.dtable td:first-child{padding-left:14px}
+  .dtable th:last-child,.dtable td:last-child{padding-right:14px}
   .dtable .r{text-align:right;white-space:nowrap}
   .dtable th:first-child,.dtable td:first-child{padding-right:0;width:1%}
   .dsums{margin:0;padding:8px 14px}
@@ -142,6 +145,9 @@
   .dsums .big dt{color:var(--ink)}
   .dnote{margin:0;padding:0 14px 6px;color:var(--muted);font-size:12px}
   .quote .dhead{border-bottom-color:var(--send)}
+  .inco .dhead{border-bottom-color:#F3C318}
+  .inco tr.hi td{background:#FDF3C5}
+  .inco td:nth-child(2){color:var(--muted);font-size:12px}
   .dsave{margin:4px 14px 10px;font:inherit;font-weight:600;font-size:13px;color:var(--bar);background:#E7F3EF;border:0;border-radius:8px;padding:8px 12px;cursor:pointer}
   .dsave:hover{background:#D7ECE5}
 
@@ -199,7 +205,9 @@
     <button class="chip">Wo ist meine Bestellung GT24-58123?</button>
     <button class="chip">Kannst du mir eine Rechnung schreiben?</button>
     <button class="chip">Was sind eure Bestseller?</button>
-    <button class="chip">Angebot für 10 ErgoFlex Pro</button>
+    <button class="chip">Was ändert sich bei FCA statt DDP für 20 ProBook in die Schweiz?</button>
+    <button class="chip">Welche Mengenrabatte gibt es?</button>
+    <button class="chip">Angebot für 50 ErgoFlex Pro DAP nach Frankreich</button>
     <button class="chip">Do I have to pay customs for Switzerland?</button>
     <button class="chip">¿Cuánto pesa el ProBook 14 Air?</button>
     <button class="chip">Ik wil iets terugsturen</button>
@@ -217,7 +225,7 @@
 
 <aside>
   <h2>Test-Bestellungen</h2>
-  <p class="hint">Antippen – der Bot fragt die Sendung ab und meldet sich kurz darauf mit der Antwort des Spediteurs.</p>
+  <p class="hint">Antippen – oder einfach eine beliebige Bestellnummer und E-Mail erfinden. Der Bot simuliert die passende Sendung.</p>
   <ul class="orders" id="orders"></ul>
   <h2>Unsere 5 Bestseller</h2>
   <p class="hint">Antippen für das Datenblatt.</p>
@@ -226,7 +234,8 @@
   <ul class="can">
     <li>Sendungen verfolgen und beim Spediteur nachfragen</li>
     <li>Rechnungen erstellen</li>
-    <li>Produkte erklären, Datenblätter und Mengenangebote erstellen</li>
+    <li>Produkte erklären, Datenblätter und B2B-Angebote mit Mengenrabatt erstellen</li>
+    <li>Incoterms erklären und Preise von EXW bis DDP vergleichen</li>
     <li>Versandkosten, Lieferzeiten und Zollfragen klären</li>
     <li>Retouren und Zahlungsarten erklären</li>
     <li>an das Service-Team übergeben</li>
@@ -322,16 +331,89 @@ const CARRIER_UPDATE={
   "GT24-58044":{de:'Update von PostNL 📍 Dein Paket liegt im Depot Utrecht-Noord, weil die Hausnummer fehlt. Ich hab den Fall an unser Team gegeben – die klären die Adresse mit dir, dann stellt PostNL neu zu.',en:'Update from PostNL 📍 Your parcel is at the Utrecht-Noord depot because the house number is missing. I’ve passed this on to our team – they’ll confirm the address with you and PostNL will redeliver.',fr:"Mise à jour de PostNL 📍 Ton colis est au dépôt d'Utrecht-Noord car il manque le numéro de rue. J'ai transmis le dossier à notre équipe – elle confirme l'adresse avec toi, puis PostNL relivre.",es:'Novedades de PostNL 📍 Tu paquete está en el depósito de Utrecht-Noord porque falta el número de la calle. He pasado el caso a nuestro equipo: confirmarán la dirección contigo y PostNL lo volverá a entregar.',nl:'Update van PostNL 📍 Je pakket ligt in het depot Utrecht-Noord omdat het huisnummer ontbreekt. Ik heb het doorgegeven aan ons team – zij checken het adres met je en daarna bezorgt PostNL opnieuw.'}
 };
 
+
+// ---------------- Simulierte Bestellungen für JEDE Bestellnummer ----------------
+function hashStr(x){let h=2166136261;for(const ch of x){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+const SIM={
+  city:{DE:['Berlin','München','Köln','Frankfurt am Main'],FR:['Paris','Marseille','Bordeaux','Lille'],ES:['Madrid','Barcelona','Sevilla','Bilbao'],PL:['Warszawa','Gdańsk','Wrocław','Poznań'],NL:['Amsterdam','Rotterdam','Den Haag','Eindhoven'],CH:['Bern','Basel','Genève','Luzern'],GB:['London','Manchester','Bristol','Leeds']},
+  hub:{DE:['Leipzig','Kassel','Hannover'],FR:['Paris-Nord','Orléans','Lyon-Saint-Exupéry'],ES:['Zaragoza','Madrid-Coslada','Valencia'],PL:['Stryków','Poznań','Wrocław'],NL:['Utrecht','Nieuwegein','Zwolle'],CH:['Basel','Zürich-Mülligen'],GB:['East Midlands','Coventry']},
+  street:{DE:'Hauptstraße',FR:'Rue de la Paix',ES:'Calle Mayor',PL:'ul. Długa',NL:'Kerkstraat',CH:'Bahnhofstrasse',GB:'High Street'},
+  carrier:{DE:'DHL',FR:'DPD',ES:'GLS',PL:'DHL',NL:'PostNL',CH:'DHL Express',GB:'UPS'},
+  pay:{DE:'PayPal',FR:'Carte Bancaire',ES:'Bizum',PL:'BLIK',NL:'iDEAL',CH:'Kreditkarte',GB:'Kreditkarte'},
+  tld:{de:'DE',at:'DE',fr:'FR',es:'ES',pl:'PL',nl:'NL',ch:'CH',uk:'GB'},
+  byLang:{de:'DE',en:'GB',fr:'FR',es:'ES',nl:'NL'}
+};
+function nameFromMail(mail){
+  const local=(mail||'kunde').split('@')[0].replace(/\d+/g,'');
+  const parts=local.split(/[._-]+/).filter(Boolean);
+  if(!parts.length) return 'Kunde';
+  return parts.map(p=>p.length===1?p.toUpperCase()+'.':p[0].toUpperCase()+p.slice(1)).join(' ');
+}
+function makeOrder(id,mail){
+  const h=hashStr(id+'|'+(mail||''));
+  const tld=((mail||'').split('.').pop()||'').toLowerCase();
+  const land=SIM.tld[tld]||SIM.byLang[lang]||'DE';
+  const eu=COUNTRIES[land].eu;
+  const pool=eu?['transit','transit','processing','delivered']:['customs','transit','delivered'];
+  const st=pool[h%pool.length];
+  const city=SIM.city[land][(h>>>4)%SIM.city[land].length];
+  const hubs=SIM.hub[land]; const hub=hubs[(h>>>7)%hubs.length];
+  const pids=Object.keys(PRODUCTS); const p=pids[(h>>>9)%pids.length];
+  const qty=((h>>>12)%5===0)?2:1;
+  const c=SIM.carrier[land];
+  const o={email:(mail||'').toLowerCase(),name:nameFromMail(mail),land,ort:city,hub,
+    addr:`${SIM.street[land]} ${1+(h>>>14)%120}, ${String(10000+(h>>>3)%89999)} ${city}`,
+    items:[{p,q:qty}],pay:SIM.pay[land],dienst:c,
+    tracking:c+' '+String(1000000000+(h%8999999999)).slice(0,10),
+    time:`${8+(h>>>5)%10}:${String((h>>>11)%60).padStart(2,'0')}`,sim:true,st};
+  if(st==='transit'){o.keys=['ordered','shipped','transit','delivered'];o.at=2;o.ordered=isoIn(-(2+h%3));o.etaD=[isoIn(1+(h>>>6)%3)];}
+  if(st==='processing'){o.keys=['ordered','packed','transit','delivered'];o.at=1;o.ordered=isoIn(-1);o.etaD=[isoIn(2+(h>>>6)%2),isoIn(4+(h>>>6)%2)];o.warehouse=true;o.tracking='–';}
+  if(st==='delivered'){o.keys=['ordered','shipped','transit','delivered'];o.at=4;o.ordered=isoIn(-(6+h%5));o.etaD=[isoIn(-(1+(h>>>6)%4))];}
+  if(st==='customs'){o.keys=['ordered','shipped','customs','delivered'];o.at=2;o.ordered=isoIn(-(3+h%3));o.etaD=[isoIn(2)];if(land==='CH')o.hint='chVat';}
+  return o;
+}
+const SIM_UPDATE={
+ de:{transit:(c,hub,city)=>`Update von ${c} 📍 Dein Paket ist heute Morgen im Verteilzentrum ${hub} angekommen und rollt von dort weiter Richtung ${city}. Alles läuft nach Plan – ${c} schickt dir vor der Zustellung noch eine Nachricht mit Zeitfenster.`,
+     processing:(c)=>`Update aus unserem Lager 📍 Deine Bestellung ist gerade in der Verpackung und geht heute Nachmittag an ${c} raus. Die Sendungsnummer bekommst du direkt danach per E-Mail.`,
+     delivered:(c,hub,city,t)=>`Update von ${c} 📍 Dein Paket wurde in ${city} um ${t} Uhr zugestellt und an der Haustür übergeben. Falls etwas nicht stimmt, sag einfach Bescheid!`,
+     customs:(c,hub,city)=>`Update von ${c} 📍 Dein Paket ist beim Zoll in ${hub} und wird gerade abgefertigt. Danach geht es direkt weiter nach ${city}. Eventuelle Einfuhrabgaben kassiert ${c} bei der Zustellung.`},
+ en:{transit:(c,hub,city)=>`Update from ${c} 📍 Your parcel arrived at the ${hub} sorting centre this morning and is now heading to ${city}. Everything's on schedule – ${c} will message you with a time slot before delivery.`,
+     processing:(c)=>`Update from our warehouse 📍 Your order is being packed right now and will be handed over to ${c} this afternoon. You'll get the tracking number by email right after.`,
+     delivered:(c,hub,city,t)=>`Update from ${c} 📍 Your parcel was delivered in ${city} at ${t} and handed over at your front door. If anything's wrong, just let me know!`,
+     customs:(c,hub,city)=>`Update from ${c} 📍 Your parcel is at customs in ${hub} and is being cleared right now. After that it goes straight on to ${city}. ${c} will collect any import charges on delivery.`},
+ fr:{transit:(c,hub,city)=>`Mise à jour de ${c} 📍 Ton colis est arrivé ce matin au centre de tri de ${hub} et repart maintenant vers ${city}. Tout se passe comme prévu – ${c} t'enverra un message avec le créneau avant la livraison.`,
+     processing:(c)=>`Nouvelles de notre entrepôt 📍 Ta commande est en cours d'emballage et part cet après-midi avec ${c}. Tu recevras le numéro de suivi par e-mail juste après.`,
+     delivered:(c,hub,city,t)=>`Mise à jour de ${c} 📍 Ton colis a été livré à ${city} à ${t} et remis à ta porte. Si quelque chose ne va pas, dis-le-moi !`,
+     customs:(c,hub,city)=>`Mise à jour de ${c} 📍 Ton colis est à la douane de ${hub}, le dédouanement est en cours. Ensuite il repart directement vers ${city}. ${c} encaissera les éventuels frais d'importation à la livraison.`},
+ es:{transit:(c,hub,city)=>`Novedades de ${c} 📍 Tu paquete llegó esta mañana al centro de distribución de ${hub} y ya va de camino a ${city}. Todo va según lo previsto: ${c} te avisará con la franja horaria antes de la entrega.`,
+     processing:(c)=>`Novedades del almacén 📍 Estamos embalando tu pedido ahora mismo y sale esta tarde con ${c}. Recibirás el número de seguimiento por e-mail justo después.`,
+     delivered:(c,hub,city,t)=>`Novedades de ${c} 📍 Tu paquete se entregó en ${city} a las ${t} y se dejó en tu puerta. Si algo no está bien, ¡avísame!`,
+     customs:(c,hub,city)=>`Novedades de ${c} 📍 Tu paquete está en la aduana de ${hub} y lo están despachando ahora. Después sigue directo a ${city}. ${c} cobrará los posibles gastos de importación en la entrega.`},
+ nl:{transit:(c,hub,city)=>`Update van ${c} 📍 Je pakket is vanochtend aangekomen in het sorteercentrum in ${hub} en gaat nu verder naar ${city}. Alles loopt volgens plan – ${c} stuurt je vóór de bezorging een bericht met het tijdvak.`,
+     processing:(c)=>`Update uit ons magazijn 📍 Je bestelling wordt nu ingepakt en gaat vanmiddag mee met ${c}. De trackingcode krijg je meteen daarna per e-mail.`,
+     delivered:(c,hub,city,t)=>`Update van ${c} 📍 Je pakket is om ${t} uur in ${city} bezorgd en aan de deur afgegeven. Klopt er iets niet? Laat het me gewoon weten!`,
+     customs:(c,hub,city)=>`Update van ${c} 📍 Je pakket ligt bij de douane in ${hub} en wordt nu ingeklaard. Daarna gaat het direct door naar ${city}. Eventuele invoerkosten int ${c} bij de bezorging.`}
+};
+function extractOrderId(text){
+  const t=text.replace(/[\w.+-]+@[\w.-]+\.\w+/g,' ');
+  let m=t.match(/\bGT24-?(\d{3,})\b/i); if(m) return 'GT24-'+m[1];
+  m=t.match(/(?:bestell(?:ung|nummer|nr)?|auftrag(?:snummer)?|order(?:\s*(?:number|no|nr|id))?|commande|n°|pedido|bestelling|bestelnummer|nummer|number|nr\.?|#)\s*[:#]?\s*([A-Za-z0-9][A-Za-z0-9-]{2,19})/i);
+  if(m&&/\d{3,}/.test(m[1])) return m[1].toUpperCase();
+  m=t.match(/\b([A-Za-z]{1,6}-?\d{3,}[A-Za-z0-9-]*)\b/); if(m) return m[1].toUpperCase();
+  m=t.match(/\b(\d{5,12})\b/); if(m) return m[1];
+  return null;
+}
+
 // ---------------- Sprachen (DE, EN, FR, ES, NL) ----------------
 let lang='de';
 const LANG_NAMES={de:'Deutsch',en:'Englisch',fr:'Französisch',es:'Spanisch',nl:'Niederländisch'};
 const LOCALE={de:'de-DE',en:'en-GB',fr:'fr-FR',es:'es-ES',nl:'nl-NL'};
 const WORDS={
- de:"ich und ist mein meine meiner wo wann was wie kostet kosten nach bitte zoll versand bestellung nicht mit ein eine der die das den dem hallo danke kann muss zurück zurückschicken für will möchte paket lieferung mitarbeiter reden sprechen rechnung zahlen geht gibt es auch schon schreib erstell mir angebot stück wie viel schwer erzähl mehr über eure euer habt",
- en:"i my is where when what how much does do the and order shipping ship cost costs customs duties return refund please hello hey thanks thank can want to an for delivery parcel package pay invoice talk speak human agent someone have it me tell about your you quote offer pieces heavy best sellers bestsellers",
- fr:"je mon ma mes est où quand quel quelle quels quelles les des le la commande livraison frais douane douanes retour retourner bonjour salut merci c'est pour combien délais délai delai vous tu et colis payer facture parler conseiller veux voudrais quoi dois moi devis pèse vos meilleures ventes",
- es:"yo mi mis es dónde donde cuándo cuando qué que el los las la pedido envío envio coste costo aduana aduanas devolución devolver hola gracias para cuánto cuanto quiero por y paquete pagar factura hablar persona agente tengo me presupuesto unidades pesa vuestros más vendidos",
- nl:"ik mijn is waar wanneer wat hoe de het een bestelling verzending verzendkosten kosten douane retour terugsturen hallo hoi dank bedankt voor hoeveel wil naar en pakket levering betalen factuur praten medewerker kan moet iets offerte stuks zwaar jullie meest verkocht"
+ de:"ich und ist mein meine meiner wo wann was wie kostet kosten nach bitte zoll versand bestellung nicht mit ein eine der die das den dem hallo danke kann muss zurück zurückschicken für will möchte paket lieferung mitarbeiter reden sprechen rechnung zahlen geht gibt es auch schon schreib erstell mir angebot stück wie viel schwer erzähl mehr über eure euer habt bietet ihr welche gibt bedeutet heißt statt anstatt unterschied vergleich rabatt mengenrabatt ändert ändern preis",
+ en:"i my is where when what how much does do the and order shipping ship cost costs customs duties return refund please hello hey thanks thank can want to an for delivery parcel package pay invoice talk speak human agent someone have it me tell about your you quote offer pieces heavy best sellers bestsellers instead compare difference discount change price",
+ fr:"je mon ma mes est où quand quel quelle quels quelles les des le la commande livraison frais douane douanes retour retourner bonjour salut merci c'est pour combien délais délai delai vous tu et colis payer facture parler conseiller veux voudrais quoi dois moi devis pèse vos meilleures ventes au lieu plutôt comparer différence remise prix change",
+ es:"yo mi mis es dónde donde cuándo cuando qué que el los las la pedido envío envio coste costo aduana aduanas devolución devolver hola gracias para cuánto cuanto quiero por y paquete pagar factura hablar persona agente tengo me presupuesto unidades pesa vuestros más vendidos en vez lugar comparar diferencia descuento precio cambia",
+ nl:"ik mijn is waar wanneer wat hoe de het een bestelling verzending verzendkosten kosten douane retour terugsturen hallo hoi dank bedankt voor hoeveel wil naar en pakket levering betalen factuur praten medewerker kan moet iets offerte stuks zwaar jullie meest verkocht in plaats van vergelijk verschil korting prijs verandert"
 };
 const WSET=Object.fromEntries(Object.entries(WORDS).map(([k,v])=>[k,new Set(v.split(' '))]));
 function detectLang(text){
@@ -536,11 +618,12 @@ REGELN
 - Antworte IMMER in der Sprache der letzten Kundennachricht (DE, EN, FR, ES, NL, PL …).
 - Ton wie im Messenger: locker, herzlich, per Du (in anderen Sprachen informell), kurze Nachrichten (max. 3–4 Sätze), gelegentlich ein Emoji. Kein Markdown.
 - Nutze NUR Wissensbasis und Tools. Erfinde keine Fakten, Preise oder Zusagen.
-- Datenschutz: Bestelldaten nur nach Prüfung mit Bestellnummer UND E-Mail (bestellung_abrufen).
+- Datenschutz: Frage immer nach Bestellnummer UND E-Mail und rufe dann bestellung_abrufen auf. Es ist eine Simulation: JEDE Bestellnummer in jedem Format und jede E-Mail funktioniert – lehne nie eine Bestellnummer ab.
 - Nach bestellung_abrufen zeigt die Seite eine Sendungskarte und fragt AUTOMATISCH beim Spediteur nach; dessen Antwort erscheint nach wenigen Sekunden von selbst im Chat. Sag dem Kunden kurz, dass du beim Spediteur nachgefragt hast und dich gleich meldest.
 - Rechnung gewünscht: rechnung_erstellen (Bestellung muss vorher geprüft sein). Die Rechnung erscheint als Beleg im Chat.
 - Fragen zu einem Produkt: produkt_info aufrufen (zeigt ein Datenblatt) und die Frage konkret beantworten.
-- Angebot/Mengenpreis gewünscht: angebot_erstellen (Rabatt: ab 5 Stück 5 %, ab 10 Stück 10 %, ab 25 Stück 15 %).
+- Angebot/Mengenpreis gewünscht: angebot_erstellen (B2B, Nettopreise). Mengenrabatte: ab 5 Stück 5 %, ab 10: 8 %, ab 25: 12 %, ab 50: 15 %, ab 100: 18 %, ab 250: 22 %. Außerdem 2 % Skonto bei Zahlung in 10 Tagen (sonst 30 Tage netto), frachtfrei in der EU ab 5.000 € Warenwert, Rahmenvertrag ab 25.000 € Jahresumsatz +3 %.
+- Incoterms® 2020: Wir bieten EXW, FCA, CPT, CIP, DAP, DPU, DDP (Versand ab Lager Hamburg per Lkw/Paket). Seeklauseln FOB/CFR/CIF/FAS nicht – stattdessen FCA/CPT/CIP. Kostenmodell: FCA +25 € Verladung (+35 € Ausfuhranmeldung außerhalb EU), ab CPT + Fracht, CIP + Versicherung, DPU +30 € Entladung, DDP außerhalb EU + 35 € Verzollung + Zoll + Einfuhrumsatzsteuer (CH 8,1 %, GB 20 %). Fragt der Kunde, wie sich der Preis bei z. B. FCA statt DDP ändert: incoterms_vergleich aufrufen und Preisunterschied UND Risikoübergang erklären.
 - An Mitarbeiter übergeben (an_mitarbeiter_uebergeben) bei Wunsch, Beschwerde, Schaden, Kulanz, Rechtsfragen, Zustellproblem oder Unsicherheit.
 - Du bist ein KI-Bot und gibst dich NIE als Mensch aus.
 
@@ -627,19 +710,6 @@ function makeInvoice(id){
     [I.paid(o.pay)+' ✓', exportCase?I.exp:I.oss],
     I.save, `Rechnung_${nr}`);
 }
-function discountFor(q){return q>=25?15:q>=10?10:q>=5?5:0;}
-function makeQuote(pid,qty,cc){
-  const p=PRODUCTS[pid], t=T(), Q=t.q, I=t.inv, C=COUNTRIES[cc||'DE'];
-  const d=discountFor(qty); const base=p.price*qty; const disc=base*d/100; const gross=base-disc;
-  const net=C.eu?gross/(1+C.vat/100):gross/1.19; const vat=C.eu?gross-net:0;
-  const nr='AN-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*8999);
-  docCard('quote',`📄 ${Q.title} ${I.no} ${nr}`,
-    [[I.date,fmtDate(isoIn(0),true)],[Q.dest,t.c[cc||'DE']]],
-    {head:[I.qty,I.item,Q.unit,I.total],body:[[qty+'×',p.name,eur(p.price),eur(base)],...(d?[['',`${Q.disc} ${d} %`,'','−'+eur(disc)]]:[])]},
-    C.eu?[[I.net,eur(net)],[`${I.vat} ${C.vat} %`,eur(vat)],[I.gross,eur(gross),true]]:[[I.net,eur(net),true]],
-    [Q.valid+(C.eu?'':' · '+I.exp)],
-    Q.save, `Angebot_${nr}`);
-}
 // ---------- Produkt-Datenblatt ----------
 function showProduct(pid){
   const p=PRODUCTS[pid], t=T(), P=t.P;
@@ -687,7 +757,7 @@ function carrierInquiry(id){
     setTimeout(()=>{
       if(my!==session) return;
       pill.textContent=T().replied(who()); pill.classList.add('done');
-      const msg=CARRIER_UPDATE[id][lang]; add('bot',msg); history.push({role:'assistant',content:msg});
+      const msg=(CARRIER_UPDATE[id]&&CARRIER_UPDATE[id][lang])||SIM_UPDATE[lang][o.st](o.dienst,o.hub||o.ort,o.ort,o.time||'10:42'); add('bot',msg); history.push({role:'assistant',content:msg});
       presence.textContent='online';
       if(o.warn) handoff(`${id}: ${T().st[o.st]} – ${o.dienst}`,'hoch');
     },1400);
@@ -696,15 +766,222 @@ function carrierInquiry(id){
 }
 // ---------- Bestellung prüfen ----------
 function checkOrder(id,mail){
-  id=(id||'').trim().toUpperCase(); const o=ORDERS[id];
-  if(!o) return {err:'notFound'};
-  if((mail||'').trim().toLowerCase()!==o.email) return {err:'mismatch'};
+  id=(id||'').trim().toUpperCase(); if(!id) return {err:'notFound'};
+  if(!ORDERS[id]) ORDERS[id]=makeOrder(id,(mail||'').trim());
+  const o=ORDERS[id];
   verified.add(id); lastId=id; return {id,o};
+}
+
+
+// ---------------- Incoterms® 2020 + B2B-Preisstaffel (frei erfunden) ----------------
+const TERMS=['EXW','FCA','CPT','CIP','DAP','DPU','DDP'];
+const FREIGHT={DE:[15,.4],FR:[45,.6],ES:[60,.7],PL:[40,.5],NL:[35,.5],CH:[70,.9],GB:[85,1.0]}; // Grundpreis + € pro kg
+const DUTY={GB:{probook:0,ergoflex:2.7,viewmax:2,soundcall:2,deskdock:0},CH:{}}; // CH: seit 2024 keine Industriezölle
+const IMPORT_VAT={CH:8.1,GB:20};
+const TIERS=[[250,22],[100,18],[50,15],[25,12],[10,8],[5,5]];
+function discountFor(q){for(const [n,d] of TIERS) if(q>=n) return d; return 0;}
+const r2=x=>Math.round(x*100)/100;
+let lastQty=null, lastCountry=null, lastTerm=null, pendingInco=null;
+
+function incoCalc(pid,qty,cc,term){
+  const p=PRODUCTS[pid], C=COUNTRIES[cc];
+  const unit=r2(p.price/1.19), goods=r2(unit*qty), d=discountFor(qty), disc=r2(goods*d/100), net=r2(goods-disc);
+  const w=p.weight*qty, i=TERMS.indexOf(term);
+  let freight=r2(FREIGHT[cc][0]+FREIGHT[cc][1]*w); if(C.eu&&net>=5000) freight=0;
+  const ins=Math.max(5,r2(net*1.1*0.003));
+  const lines=[];
+  if(i>=1){ lines.push(['load',25]); if(!C.eu) lines.push(['export',35]); }
+  if(i>=2) lines.push(['freight',freight]);
+  if(term==='CIP') lines.push(['ins',ins]);
+  if(term==='DPU') lines.push(['unload',30]);
+  if(term==='DDP'&&!C.eu){
+    const base=net+freight; const duty=r2(base*((DUTY[cc]||{})[pid]||0)/100); const ivat=r2((base+duty)*(IMPORT_VAT[cc]||0)/100);
+    lines.push(['clear',35]); if(duty) lines.push(['duty',duty]); lines.push(['ivat',ivat]);
+  }
+  const total=r2(net+lines.reduce((a,l)=>a+l[1],0));
+  return {unit,goods,d,disc,net,lines,total};
+}
+
+const IK={
+ de:{def:{EXW:'Ab Werk – du holst die Ware in unserem Lager in Hamburg ab und trägst ab dort alle Kosten und Risiken, auch die Exportabfertigung.',FCA:'Frei Frachtführer – wir verladen die Ware in Hamburg auf deinen Spediteur und erledigen die Ausfuhr. Ab der Übergabe sind Fracht und Risiko deine Sache.',CPT:'Frachtfrei – wir zahlen die Fracht bis zu dir, das Risiko geht aber schon bei Übergabe an den ersten Frachtführer in Hamburg auf dich über.',CIP:'Wie CPT, zusätzlich schließen wir für dich eine Transportversicherung ab (110 % des Warenwerts, „all risks“).',DAP:'Geliefert benannter Ort – wir liefern bis zu deiner Adresse und tragen das Risiko bis dorthin. Entladen, Zoll und Einfuhrabgaben übernimmst du.',DPU:'Wie DAP, aber wir entladen die Ware zusätzlich bei dir.',DDP:'Geliefert verzollt – wir übernehmen alles inklusive Verzollung und Einfuhrabgaben. Du bekommst einen Komplettpreis ohne Überraschungen.'},
+   risk:{EXW:'schon in unserem Lager in Hamburg',FCA:'schon bei Übergabe an den Frachtführer in Hamburg',CPT:'schon bei Übergabe an den Frachtführer in Hamburg',CIP:'schon bei Übergabe an den Frachtführer in Hamburg',DAP:'erst bei dir vor Ort',DPU:'erst nach dem Entladen bei dir',DDP:'erst bei dir vor Ort'},
+   short:{EXW:'Lager Hamburg',FCA:'Übergabe Hamburg',CPT:'Übergabe Hamburg',CIP:'Übergabe Hamburg + versichert',DAP:'bei dir',DPU:'bei dir, entladen',DDP:'bei dir, verzollt'},
+   cost:{load:'Verladung & Abfertigung Hamburg',export:'Ausfuhranmeldung',freight:'Fracht',ins:'Transportversicherung',unload:'Entladung',clear:'Verzollung',duty:'Zoll',ivat:'Einfuhrumsatzsteuer'},
+   cmpHead:(q,p,c,a,ta,b,tb)=>`${q}× ${p} nach ${c}: ${a} = ${ta}, ${b} = ${tb} (netto).`,
+   cmpDiff:(cheap,d,items)=>`${cheap} ist ${d} günstiger, weil diese Posten nicht im Preis stecken – die organisierst und zahlst du dann selbst: ${items}.`,
+   cmpSame:'Preislich gibt es keinen Unterschied.',
+   cmpRisk:(a,b,ra,rb)=>`Beim Risiko: Mit ${a} geht es ${ra} auf dich über, mit ${b} ${rb}.`,
+   cmpTail:'Alle Klauseln im Vergleich 👇',
+   listHead:'Die Incoterms® 2020, die wir anbieten (Versand ab Lager Hamburg):',listTail:'Sag mir Produkt, Menge und Land – dann rechne ich dir den Preis für jede Klausel aus. 🧮',
+   sea:'FOB, CFR, CIF und FAS sind reine See-Klauseln für Containerverschiffung ab Hafen. Wir liefern per Lkw und Paket, deshalb bieten wir die passenden Gegenstücke an: FCA statt FOB, CPT statt CFR und CIP statt CIF.',
+   askCtx:'Gern rechne ich das aus! Für welches Produkt, wie viele Stück und in welches Land? Zum Beispiel: „FCA statt DDP für 20 ProBook in die Schweiz“.',
+   defTail:' Willst du sehen, was das preislich ausmacht? Nenn mir Produkt, Menge und Land.',
+   disc:'Unsere Mengenrabatte für Geschäftskunden (auf den Nettopreis):\n– ab 5 Stück: 5 %\n– ab 10 Stück: 8 %\n– ab 25 Stück: 12 %\n– ab 50 Stück: 15 %\n– ab 100 Stück: 18 %\n– ab 250 Stück: 22 %\nDazu: 2 % Skonto bei Zahlung innerhalb von 10 Tagen, frachtfrei in der EU ab 5.000 € Warenwert und bei Rahmenverträgen ab 25.000 € Jahresumsatz nochmal 3 % extra. 💼',
+   title:'Incoterms-Vergleich',colRisk:'Risiko geht über',colTotal:'Preis netto',colUnit:'pro Stück',basis:d=>`Netto-Preise inkl. ${d} % Mengenrabatt. Zoll und Einfuhrumsatzsteuer nur bei DDP außerhalb der EU.`,
+   goods:'Warenwert netto',netTotal:'Gesamt netto',rc:'Steuerfreie innergemeinschaftliche Lieferung – Reverse Charge (USt-IdNr. erforderlich).',pay:'Zahlbar in 30 Tagen netto, 2 % Skonto bei Zahlung innerhalb von 10 Tagen.',ddp:'DDP: Zoll und Einfuhrumsatzsteuer sind bereits enthalten.',
+   quoteDone:(q,p,term,d)=>`Hier ist dein Angebot für ${q} × ${p} (${term}) 📄 ${d?`Du bekommst ${d} % Mengenrabatt. `:''}Alle Preise sind netto für Geschäftskunden. Soll ich dir zeigen, wie sich der Preis mit anderen Incoterms ändert?`},
+ en:{def:{EXW:'Ex Works – you collect the goods at our Hamburg warehouse and bear all costs and risks from there, including export clearance.',FCA:'Free Carrier – we load the goods onto your carrier in Hamburg and handle export clearance. From handover, freight and risk are yours.',CPT:'Carriage Paid To – we pay the freight to you, but the risk passes to you as soon as the goods are handed to the first carrier in Hamburg.',CIP:'Like CPT, plus we take out cargo insurance for you (110% of the goods value, all risks).',DAP:'Delivered at Place – we deliver to your address and bear the risk until then. Unloading, customs and import charges are on you.',DPU:'Like DAP, but we also unload the goods at your premises.',DDP:'Delivered Duty Paid – we handle everything incl. customs clearance and import charges. You get an all-in price with no surprises.'},
+   risk:{EXW:'already at our Hamburg warehouse',FCA:'on handover to the carrier in Hamburg',CPT:'on handover to the carrier in Hamburg',CIP:'on handover to the carrier in Hamburg',DAP:'only at your premises',DPU:'only after unloading at your premises',DDP:'only at your premises'},
+   short:{EXW:'Hamburg warehouse',FCA:'handover Hamburg',CPT:'handover Hamburg',CIP:'handover Hamburg + insured',DAP:'at your site',DPU:'at your site, unloaded',DDP:'at your site, cleared'},
+   cost:{load:'Loading & handling Hamburg',export:'Export declaration',freight:'Freight',ins:'Cargo insurance',unload:'Unloading',clear:'Customs clearance',duty:'Import duty',ivat:'Import VAT'},
+   cmpHead:(q,p,c,a,ta,b,tb)=>`${q}× ${p} to ${c}: ${a} = ${ta}, ${b} = ${tb} (net).`,
+   cmpDiff:(cheap,d,items)=>`${cheap} is ${d} cheaper because these costs aren't included – you'd arrange and pay for them yourself: ${items}.`,
+   cmpSame:"There's no difference in price.",
+   cmpRisk:(a,b,ra,rb)=>`On risk: with ${a} it passes to you ${ra}, with ${b} ${rb}.`,
+   cmpTail:'All terms compared 👇',
+   listHead:'The Incoterms® 2020 we offer (shipping from our Hamburg warehouse):',listTail:"Tell me the product, quantity and country and I'll calculate the price for every term. 🧮",
+   sea:'FOB, CFR, CIF and FAS are sea-only terms for container shipping from a port. We ship by truck and parcel, so we offer the matching equivalents: FCA instead of FOB, CPT instead of CFR and CIP instead of CIF.',
+   askCtx:'Happy to calculate that! Which product, how many units and which country? For example: "FCA instead of DDP for 20 ProBook to Switzerland".',
+   defTail:' Want to see what that means for the price? Tell me the product, quantity and country.',
+   disc:'Our volume discounts for business customers (on the net price):\n– from 5 units: 5%\n– from 10: 8%\n– from 25: 12%\n– from 50: 15%\n– from 100: 18%\n– from 250: 22%\nPlus: 2% early-payment discount within 10 days, free freight within the EU from €5,000 goods value, and an extra 3% for framework agreements from €25,000 a year. 💼',
+   title:'Incoterms comparison',colRisk:'Risk passes',colTotal:'Net price',colUnit:'per unit',basis:d=>`Net prices incl. ${d}% volume discount. Duty and import VAT only apply to DDP outside the EU.`,
+   goods:'Goods value (net)',netTotal:'Total net',rc:'Tax-free intra-EU supply – reverse charge (VAT ID required).',pay:'Payable within 30 days net, 2% discount if paid within 10 days.',ddp:'DDP: import duty and import VAT are already included.',
+   quoteDone:(q,p,term,d)=>`Here's your quote for ${q} × ${p} (${term}) 📄 ${d?`You get a ${d}% volume discount. `:''}All prices are net for business customers. Want to see how the price changes with other Incoterms?`},
+ fr:{def:{EXW:"À l'usine – tu viens chercher la marchandise dans notre entrepôt de Hambourg et tu supportes tous les frais et risques, export compris.",FCA:"Franco transporteur – nous chargeons la marchandise sur ton transporteur à Hambourg et faisons l'export. Ensuite, fret et risque sont pour toi.",CPT:"Port payé jusqu'à – nous payons le fret jusqu'à chez toi, mais le risque t'est transféré dès la remise au premier transporteur à Hambourg.",CIP:'Comme CPT, avec en plus une assurance transport souscrite pour toi (110 % de la valeur, tous risques).',DAP:"Rendu au lieu de destination – nous livrons à ton adresse et portons le risque jusque-là. Déchargement, douane et taxes d'importation sont pour toi.",DPU:'Comme DAP, mais nous déchargeons aussi la marchandise chez toi.',DDP:"Rendu droits acquittés – nous gérons tout, dédouanement et taxes d'importation compris. Un prix tout compris, sans surprise."},
+   risk:{EXW:'dès notre entrepôt de Hambourg',FCA:'dès la remise au transporteur à Hambourg',CPT:'dès la remise au transporteur à Hambourg',CIP:'dès la remise au transporteur à Hambourg',DAP:'seulement chez toi',DPU:'seulement après déchargement chez toi',DDP:'seulement chez toi'},
+   short:{EXW:'entrepôt Hambourg',FCA:'remise Hambourg',CPT:'remise Hambourg',CIP:'remise Hambourg + assuré',DAP:'chez toi',DPU:'chez toi, déchargé',DDP:'chez toi, dédouané'},
+   cost:{load:'Chargement et manutention Hambourg',export:"Déclaration d'export",freight:'Fret',ins:'Assurance transport',unload:'Déchargement',clear:'Dédouanement',duty:'Droits de douane',ivat:"TVA à l'importation"},
+   cmpHead:(q,p,c,a,ta,b,tb)=>`${q}× ${p} vers ${c} : ${a} = ${ta}, ${b} = ${tb} (HT).`,
+   cmpDiff:(cheap,d,items)=>`${cheap} est ${d} moins cher, car ces frais ne sont pas inclus – tu les organises et les paies toi-même : ${items}.`,
+   cmpSame:'Aucune différence de prix.',
+   cmpRisk:(a,b,ra,rb)=>`Côté risque : avec ${a}, il t'est transféré ${ra} ; avec ${b}, ${rb}.`,
+   cmpTail:'Toutes les règles comparées 👇',
+   listHead:'Les Incoterms® 2020 que nous proposons (départ entrepôt de Hambourg) :',listTail:'Donne-moi le produit, la quantité et le pays, et je calcule le prix pour chaque règle. 🧮',
+   sea:"FOB, CFR, CIF et FAS sont des règles purement maritimes pour l'expédition en conteneur depuis un port. Nous livrons par camion et colis, donc nous proposons leurs équivalents : FCA au lieu de FOB, CPT au lieu de CFR et CIP au lieu de CIF.",
+   askCtx:"Je calcule ça avec plaisir ! Quel produit, combien d'unités et quel pays ? Par exemple : « FCA au lieu de DDP pour 20 ProBook en Suisse ».",
+   defTail:' Tu veux voir ce que ça change sur le prix ? Donne-moi le produit, la quantité et le pays.',
+   disc:"Nos remises quantité pour les pros (sur le prix HT) :\n– dès 5 unités : 5 %\n– dès 10 : 8 %\n– dès 25 : 12 %\n– dès 50 : 15 %\n– dès 100 : 18 %\n– dès 250 : 22 %\nEn plus : 2 % d'escompte pour paiement sous 10 jours, fret offert dans l'UE dès 5 000 € de marchandises et 3 % de plus pour un contrat-cadre dès 25 000 € par an. 💼",
+   title:'Comparatif Incoterms',colRisk:'Transfert du risque',colTotal:'Prix HT',colUnit:'par unité',basis:d=>`Prix HT avec ${d} % de remise quantité. Douane et TVA à l'importation seulement en DDP hors UE.`,
+   goods:'Valeur marchandise HT',netTotal:'Total HT',rc:'Livraison intracommunautaire exonérée – autoliquidation (n° TVA requis).',pay:"Payable à 30 jours net, 2 % d'escompte si paiement sous 10 jours.",ddp:"DDP : droits de douane et TVA à l'importation déjà inclus.",
+   quoteDone:(q,p,term,d)=>`Voici ton devis pour ${q} × ${p} (${term}) 📄 ${d?`Tu bénéficies de ${d} % de remise quantité. `:''}Tous les prix sont HT pour les pros. Tu veux voir comment le prix change avec d'autres Incoterms ?`},
+ es:{def:{EXW:'En fábrica – recoges la mercancía en nuestro almacén de Hamburgo y asumes desde allí todos los costes y riesgos, incluida la exportación.',FCA:'Franco transportista – cargamos la mercancía en tu transportista en Hamburgo y hacemos la exportación. Desde la entrega, flete y riesgo son tuyos.',CPT:'Transporte pagado hasta – pagamos el flete hasta ti, pero el riesgo pasa a ti al entregar la mercancía al primer transportista en Hamburgo.',CIP:'Como CPT y además contratamos un seguro de transporte para ti (110 % del valor, todo riesgo).',DAP:'Entregada en lugar – entregamos en tu dirección y asumimos el riesgo hasta allí. Descarga, aduana e impuestos de importación corren de tu cuenta.',DPU:'Como DAP, pero además descargamos la mercancía en tu destino.',DDP:'Entregada derechos pagados – nos ocupamos de todo, incluidos aduana e impuestos de importación. Un precio cerrado sin sorpresas.'},
+   risk:{EXW:'ya en nuestro almacén de Hamburgo',FCA:'ya en la entrega al transportista en Hamburgo',CPT:'ya en la entrega al transportista en Hamburgo',CIP:'ya en la entrega al transportista en Hamburgo',DAP:'solo en tu destino',DPU:'solo tras la descarga en tu destino',DDP:'solo en tu destino'},
+   short:{EXW:'almacén Hamburgo',FCA:'entrega Hamburgo',CPT:'entrega Hamburgo',CIP:'entrega Hamburgo + asegurado',DAP:'en tu destino',DPU:'en destino, descargado',DDP:'en destino, despachado'},
+   cost:{load:'Carga y gestión Hamburgo',export:'Declaración de exportación',freight:'Flete',ins:'Seguro de transporte',unload:'Descarga',clear:'Despacho de aduanas',duty:'Aranceles',ivat:'IVA de importación'},
+   cmpHead:(q,p,c,a,ta,b,tb)=>`${q}× ${p} a ${c}: ${a} = ${ta}, ${b} = ${tb} (neto).`,
+   cmpDiff:(cheap,d,items)=>`${cheap} sale ${d} más barato porque estos costes no están incluidos; los organizas y pagas tú: ${items}.`,
+   cmpSame:'No hay diferencia de precio.',
+   cmpRisk:(a,b,ra,rb)=>`En cuanto al riesgo: con ${a} pasa a ti ${ra}; con ${b}, ${rb}.`,
+   cmpTail:'Todas las cláusulas comparadas 👇',
+   listHead:'Los Incoterms® 2020 que ofrecemos (envío desde nuestro almacén de Hamburgo):',listTail:'Dime producto, cantidad y país y te calculo el precio con cada cláusula. 🧮',
+   sea:'FOB, CFR, CIF y FAS son cláusulas solo marítimas para envíos en contenedor desde puerto. Enviamos por camión y paquetería, así que ofrecemos sus equivalentes: FCA en vez de FOB, CPT en vez de CFR y CIP en vez de CIF.',
+   askCtx:'¡Te lo calculo! ¿Qué producto, cuántas unidades y a qué país? Por ejemplo: «FCA en vez de DDP para 20 ProBook a Suiza».',
+   defTail:' ¿Quieres ver cómo afecta al precio? Dime producto, cantidad y país.',
+   disc:'Nuestros descuentos por volumen para empresas (sobre el precio neto):\n– desde 5 unidades: 5 %\n– desde 10: 8 %\n– desde 25: 12 %\n– desde 50: 15 %\n– desde 100: 18 %\n– desde 250: 22 %\nAdemás: 2 % de descuento por pronto pago en 10 días, flete gratis en la UE desde 5.000 € y un 3 % extra con contrato marco desde 25.000 € al año. 💼',
+   title:'Comparativa de Incoterms',colRisk:'Transmisión del riesgo',colTotal:'Precio neto',colUnit:'por unidad',basis:d=>`Precios netos con ${d} % de descuento por volumen. Aranceles e IVA de importación solo en DDP fuera de la UE.`,
+   goods:'Valor de la mercancía (neto)',netTotal:'Total neto',rc:'Entrega intracomunitaria exenta – inversión del sujeto pasivo (NIF-IVA necesario).',pay:'Pago a 30 días neto, 2 % de descuento si pagas en 10 días.',ddp:'DDP: aranceles e IVA de importación ya incluidos.',
+   quoteDone:(q,p,term,d)=>`Aquí tienes tu presupuesto para ${q} × ${p} (${term}) 📄 ${d?`Tienes un ${d} % de descuento por volumen. `:''}Todos los precios son netos para empresas. ¿Quieres ver cómo cambia el precio con otros Incoterms?`},
+ nl:{def:{EXW:'Af fabriek – je haalt de goederen op in ons magazijn in Hamburg en draagt vanaf daar alle kosten en risico’s, ook de exportafhandeling.',FCA:'Vrachtvrij tot vervoerder – wij laden de goederen in Hamburg op jouw vervoerder en regelen de export. Daarna zijn vracht en risico voor jou.',CPT:'Vracht betaald tot – wij betalen de vracht tot bij jou, maar het risico gaat al over bij overdracht aan de eerste vervoerder in Hamburg.',CIP:'Zoals CPT, plus een transportverzekering die wij voor je afsluiten (110% van de waarde, all risks).',DAP:'Franco ter plaatse – wij leveren op jouw adres en dragen het risico tot daar. Lossen, douane en invoerkosten zijn voor jou.',DPU:'Zoals DAP, maar wij lossen de goederen ook bij jou.',DDP:'Franco inclusief rechten – wij regelen alles, inclusief inklaring en invoerkosten. Een all-in prijs zonder verrassingen.'},
+   risk:{EXW:'al in ons magazijn in Hamburg',FCA:'al bij overdracht aan de vervoerder in Hamburg',CPT:'al bij overdracht aan de vervoerder in Hamburg',CIP:'al bij overdracht aan de vervoerder in Hamburg',DAP:'pas bij jou',DPU:'pas na het lossen bij jou',DDP:'pas bij jou'},
+   short:{EXW:'magazijn Hamburg',FCA:'overdracht Hamburg',CPT:'overdracht Hamburg',CIP:'overdracht Hamburg + verzekerd',DAP:'bij jou',DPU:'bij jou, gelost',DDP:'bij jou, ingeklaard'},
+   cost:{load:'Laden & afhandeling Hamburg',export:'Exportaangifte',freight:'Vracht',ins:'Transportverzekering',unload:'Lossen',clear:'Inklaring',duty:'Invoerrechten',ivat:'Invoer-btw'},
+   cmpHead:(q,p,c,a,ta,b,tb)=>`${q}× ${p} naar ${c}: ${a} = ${ta}, ${b} = ${tb} (netto).`,
+   cmpDiff:(cheap,d,items)=>`${cheap} is ${d} goedkoper, omdat deze kosten er niet in zitten – die regel en betaal je dan zelf: ${items}.`,
+   cmpSame:'Er is geen prijsverschil.',
+   cmpRisk:(a,b,ra,rb)=>`Qua risico: bij ${a} gaat het ${ra} op je over, bij ${b} ${rb}.`,
+   cmpTail:'Alle leveringsvoorwaarden vergeleken 👇',
+   listHead:'De Incoterms® 2020 die wij aanbieden (verzending vanuit ons magazijn in Hamburg):',listTail:'Geef me product, aantal en land, dan reken ik de prijs voor elke voorwaarde uit. 🧮',
+   sea:'FOB, CFR, CIF en FAS zijn zuivere zeevrachtvoorwaarden voor containers vanuit een haven. Wij leveren per vrachtwagen en pakket, dus bieden we de passende alternatieven: FCA i.p.v. FOB, CPT i.p.v. CFR en CIP i.p.v. CIF.',
+   askCtx:'Reken ik graag voor je uit! Welk product, hoeveel stuks en naar welk land? Bijvoorbeeld: "FCA in plaats van DDP voor 20 ProBook naar Zwitserland".',
+   defTail:' Wil je zien wat dat voor de prijs betekent? Geef me product, aantal en land.',
+   disc:'Onze staffelkortingen voor zakelijke klanten (op de nettoprijs):\n– vanaf 5 stuks: 5%\n– vanaf 10: 8%\n– vanaf 25: 12%\n– vanaf 50: 15%\n– vanaf 100: 18%\n– vanaf 250: 22%\nPlus: 2% betalingskorting binnen 10 dagen, gratis vracht binnen de EU vanaf € 5.000 goederenwaarde en 3% extra bij een raamcontract vanaf € 25.000 per jaar. 💼',
+   title:'Incoterms-vergelijking',colRisk:'Risico gaat over',colTotal:'Prijs netto',colUnit:'per stuk',basis:d=>`Nettoprijzen incl. ${d}% staffelkorting. Invoerrechten en invoer-btw alleen bij DDP buiten de EU.`,
+   goods:'Goederenwaarde netto',netTotal:'Totaal netto',rc:'Vrijgestelde intracommunautaire levering – btw verlegd (btw-nummer vereist).',pay:'Betaalbaar binnen 30 dagen netto, 2% korting bij betaling binnen 10 dagen.',ddp:'DDP: invoerrechten en invoer-btw zijn al inbegrepen.',
+   quoteDone:(q,p,term,d)=>`Hier is je offerte voor ${q} × ${p} (${term}) 📄 ${d?`Je krijgt ${d}% staffelkorting. `:''}Alle prijzen zijn netto voor zakelijke klanten. Wil je zien hoe de prijs verandert met andere Incoterms?`}
+};
+const K=()=>IK[lang];
+const EU_DDP={"de": "Innerhalb der EU gibt es keinen Zoll, deshalb kostet DDP hier genauso viel wie DAP.", "en": "There are no customs duties within the EU, so DDP costs the same as DAP here.", "fr": "Il n'y a pas de douane dans l'UE, donc DDP coûte ici autant que DAP.", "es": "Dentro de la UE no hay aduana, así que DDP cuesta aquí lo mismo que DAP.", "nl": "Binnen de EU zijn er geen invoerrechten, dus DDP kost hier evenveel als DAP."};
+
+function namedPlace(term,cc){
+  if(term==='EXW'||term==='FCA') return 'Hamburg';
+  const o=lastId&&verified.has(lastId)?ORDERS[lastId]:null;
+  return (o&&o.land===cc)?o.ort:T().c[cc];
+}
+function makeQuote(pid,qty,cc,term){
+  term=term||'DAP'; cc=cc||'DE';
+  const p=PRODUCTS[pid], t=T(), Q=t.q, I=t.inv, k=K(), C=COUNTRIES[cc];
+  const r=incoCalc(pid,qty,cc,term);
+  const nr='AN-'+new Date().getFullYear()+'-'+Math.floor(1000+Math.random()*8999);
+  const body=[[qty+'×',p.name,eur(r.unit),eur(r.goods)]];
+  if(r.d) body.push(['',`${Q.disc} ${r.d} %`,'','−'+eur(r.disc)]);
+  r.lines.forEach(([key,amt])=>body.push(['',k.cost[key],'',amt===0?I.free:eur(amt)]));
+  const sums=[[k.goods,eur(r.net)],[k.netTotal,eur(r.total),cc!=='DE']];
+  if(cc==='DE'){sums.push([`${I.vat} 19 %`,eur(r2(r.total*0.19))]);sums.push([I.gross,eur(r2(r.total*1.19)),true]);}
+  const notes=[Q.valid+' · '+k.pay];
+  if(cc!=='DE'&&C.eu) notes.push(k.rc);
+  if(!C.eu) notes.push(term==='DDP'?k.ddp:I.exp);
+  docCard('quote',`📄 ${Q.title} ${I.no} ${nr}`,
+    [[I.date,fmtDate(isoIn(0),true)],[Q.dest,t.c[cc]],['Incoterms® 2020',`${term} ${namedPlace(term,cc)}`]],
+    {head:[I.qty,I.item,Q.unit,I.total],body},sums,notes,Q.save,`Angebot_${nr}`);
+  lastProduct=pid; lastQty=qty; lastCountry=cc; lastTerm=term;
+  return r;
+}
+function showIncoTable(pid,qty,cc,hi){
+  const p=PRODUCTS[pid], t=T(), k=K();
+  const c=el('article','doc inco');
+  const top=el('div','dhead'); const h=el('div'); h.appendChild(el('strong',null,'⚖️ '+k.title)); h.appendChild(el('small',null,`${qty}× ${p.name} → ${t.c[cc]}`));
+  top.appendChild(h); top.appendChild(el('span','dlogo','GT24')); c.appendChild(top);
+  const tb=el('table','dtable'); const th=el('thead'); const tr0=el('tr');
+  ['Incoterm',k.colRisk,k.colTotal,k.colUnit].forEach((x,i)=>tr0.appendChild(el('th',i>=2?'r':'',x))); th.appendChild(tr0); tb.appendChild(th);
+  const tbo=el('tbody'); let d=0;
+  TERMS.forEach(term=>{const r=incoCalc(pid,qty,cc,term); d=r.d;
+    const tr=el('tr',hi.includes(term)?'hi':''); const td=el('td'); td.appendChild(el('b',null,term)); tr.appendChild(td);
+    tr.appendChild(el('td',null,k.short[term])); tr.appendChild(el('td','r',eur(r.total))); tr.appendChild(el('td','r',eur(r2(r.total/qty)))); tbo.appendChild(tr);});
+  tb.appendChild(tbo); c.appendChild(tb);
+  c.appendChild(el('p','dnote',k.basis(d)));
+  stamp(c); log.appendChild(c); scroll();
+  lastProduct=pid; lastQty=qty; lastCountry=cc;
+}
+function compareText(pid,qty,cc,a,b){
+  const k=K(), p=PRODUCTS[pid];
+  const ra=incoCalc(pid,qty,cc,a), rb=incoCalc(pid,qty,cc,b);
+  let out=k.cmpHead(qty,p.name,T().c[cc],a,eur(ra.total),b,eur(rb.total));
+  const diff=r2(Math.abs(ra.total-rb.total));
+  if(diff<0.01){ out+=' '+k.cmpSame; if(COUNTRIES[cc].eu&&[a,b].includes('DDP')) out+=' '+EU_DDP[lang]; }
+  else{
+    const [cheap,exp]=ra.total<rb.total?[[a,ra],[b,rb]]:[[b,rb],[a,ra]];
+    const have=new Set(cheap[1].lines.map(l=>l[0]));
+    const items=exp[1].lines.filter(l=>!have.has(l[0])).map(l=>`${k.cost[l[0]]} (${eur(l[1])})`).join(', ');
+    out+=' '+k.cmpDiff(cheap[0],eur(diff),items);
+  }
+  if(k.risk[a]!==k.risk[b]) out+=' '+k.cmpRisk(a,b,k.risk[a],k.risk[b]);
+  return out+'\n'+k.cmpTail;
+}
+function incoHandler(text,t,tClean,pid,qty,wantsQuote){
+  const L=T(), k=K();
+  const found=[...new Set((text.toUpperCase().match(/\b(EXW|FCA|CPT|CIP|DAP|DPU|DDP|FOB|CFR|CIF|FAS)\b/g)||[]))];
+  const sea=found.filter(x=>!TERMS.includes(x)); const terms=found.filter(x=>TERMS.includes(x));
+  const mentionsInco=/incoterm|lieferbeding|lieferklausel|delivery term|trade term|condiciones de entrega|leveringsvoorwaard|conditions de livraison/.test(t);
+  const discWord=/mengenrabatt|rabatt|staffel|volume discount|bulk discount|discount|remise|descuento|korting|skonto|rahmenvertrag/.test(t);
+  const priceWord=/preis|kost|price|cost|prix|co[uû]t|precio|cuesta|cu[aá]nto|prijs|g[uü]nstig|teuer|cheap|expensive|[äa]nder|change|unterschied|differ|vergleich|compar|statt|instead|lieu|vez|plaats|\bvs\b|versus|rechne|calcul|bereken/.test(t);
+  if(!terms.length&&!sea.length&&!mentionsInco&&!pendingInco){ if(discWord&&!wantsQuote) return k.disc; return null; }
+  if(sea.length&&!terms.length) return k.sea;
+  const cc=findCountry(tClean)||lastCountry||(lastId&&verified.has(lastId)?ORDERS[lastId].land:null)||SIM.byLang[lang]||'DE';
+  const prod=pid||(pendingInco||terms.length?lastProduct:null);
+  // Angebot mit Incoterm
+  if(wantsQuote&&prod&&(qty||lastQty)&&terms.length<=1){ pendingInco=null; const q2=qty||lastQty; const term=terms[0]||lastTerm||'DAP'; const r=makeQuote(prod,q2,cc,term); return k.quoteDone(q2,PRODUCTS[prod].name,term,r.d); }
+  if(wantsQuote) return null;
+  // Vergleich
+  const wantsCmp=terms.length>=2||(terms.length===1&&priceWord)||(pendingInco&&(pid||qty))||(mentionsInco&&priceWord);
+  if(wantsCmp){
+    if(!prod){ pendingInco=terms.length?terms:['FCA','DDP']; return k.askCtx; }
+    const ts=terms.length?terms:(pendingInco||[]); pendingInco=null;
+    const q2=qty||lastQty||10;
+    let a=ts[0], b=ts[1];
+    if(!a){ a='FCA'; b='DDP'; }
+    if(!b) b=(lastTerm&&lastTerm!==a)?lastTerm:(a==='DAP'?'DDP':'DAP');
+    showIncoTable(prod,q2,cc,[a,b]); lastTerm=b;
+    return compareText(prod,q2,cc,a,b);
+  }
+  const defQ=/was (ist|bedeutet|hei[sß]t)|bedeutet|what (is|does|are)|mean|qu.est|c.est quoi|signifie|qu[eé] (es|significa)|significa|wat (is|betekent)|betekent|erkl[äa]r|explain|expli/.test(t);
+  if(terms.length===1&&!defQ&&prod&&lastQty){ const a=terms[0]; const b=(lastTerm&&lastTerm!==a)?lastTerm:(a==='DDP'?'DAP':'DDP'); showIncoTable(prod,lastQty,cc,[a,b]); lastTerm=b; return compareText(prod,lastQty,cc,a,b); }
+  if(terms.length) return terms.map(x=>`${x}: ${k.def[x]}`).join('\n')+(sea.length?'\n'+k.sea:'')+k.defTail;
+  return k.listHead+'\n'+TERMS.map(x=>`– ${x}: ${k.def[x]}`).join('\n')+'\n'+k.listTail;
 }
 
 // ---------------- Tools für den KI-Modus ----------------
 const TOOLS=[
-  {name:'bestellung_abrufen',description:'Prüft Bestellnummer + E-Mail, zeigt die Sendungskarte und fragt automatisch beim Spediteur nach (Antwort kommt nach wenigen Sekunden von selbst).',
+  {name:'bestellung_abrufen',description:'Ruft eine Bestellung ab (JEDE Bestellnummer und E-Mail funktioniert – unbekannte Bestellungen werden realistisch simuliert), zeigt die Sendungskarte und fragt automatisch beim Spediteur nach (Antwort kommt nach wenigen Sekunden von selbst).',
    inputSchema:{type:'object',properties:{bestellnummer:{type:'string'},email:{type:'string'}},required:['bestellnummer','email']},
    execute:({bestellnummer,email})=>{const r=checkOrder(bestellnummer,email); if(r.err) return {fehler:r.err==='notFound'?'Bestellnummer nicht gefunden.':'E-Mail passt nicht – aus Datenschutzgründen keine Auskunft.'};
      showShipment(r.id,r.o); const neu=carrierInquiry(r.id); const o=r.o;
@@ -715,9 +992,12 @@ const TOOLS=[
   {name:'produkt_info',description:'Zeigt das Datenblatt eines Bestsellers im Chat. produkt: probook, ergoflex, viewmax, soundcall oder deskdock.',
    inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)}},required:['produkt']},
    execute:({produkt})=>{if(!PRODUCTS[produkt]) return {fehler:'Unbekanntes Produkt'}; lastProduct=produkt; showProduct(produkt); const p=PRODUCTS[produkt]; return {name:p.name,preis:p.price,lager:p.stock};}},
-  {name:'angebot_erstellen',description:'Erstellt ein Mengenangebot (Rabatt ab 5/10/25 Stück: 5/10/15 %) und zeigt es als Beleg im Chat.',
-   inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)},menge:{type:'integer'},land:{type:'string',description:'Ländercode, z. B. DE, FR'}},required:['produkt','menge']},
-   execute:({produkt,menge,land})=>{if(!PRODUCTS[produkt]||!(menge>0)) return {fehler:'Produkt oder Menge fehlt'}; makeQuote(produkt,menge,COUNTRIES[land]?land:'DE'); return {ok:true,rabatt_prozent:discountFor(menge)};}},
+  {name:'angebot_erstellen',description:'Erstellt ein B2B-Angebot (Nettopreise, Mengenrabatt, Kosten je nach Incoterm) und zeigt es als Beleg im Chat.',
+   inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)},menge:{type:'integer'},land:{type:'string',enum:Object.keys(COUNTRIES)},incoterm:{type:'string',enum:TERMS}},required:['produkt','menge']},
+   execute:({produkt,menge,land,incoterm})=>{if(!PRODUCTS[produkt]||!(menge>0)) return {fehler:'Produkt oder Menge fehlt'}; const r=makeQuote(produkt,menge,COUNTRIES[land]?land:'DE',TERMS.includes(incoterm)?incoterm:'DAP'); return {ok:true,rabatt_prozent:r.d,warenwert_netto:r.net,kostenposten:r.lines,gesamt_netto:r.total};}},
+  {name:'incoterms_vergleich',description:'Berechnet den Nettopreis für alle Incoterms (EXW, FCA, CPT, CIP, DAP, DPU, DDP) für Produkt, Menge und Land, zeigt eine Vergleichstabelle im Chat und liefert die Kostenposten je Klausel.',
+   inputSchema:{type:'object',properties:{produkt:{type:'string',enum:Object.keys(PRODUCTS)},menge:{type:'integer'},land:{type:'string',enum:Object.keys(COUNTRIES)},hervorheben:{type:'array',items:{type:'string',enum:TERMS}}},required:['produkt','menge','land']},
+   execute:({produkt,menge,land,hervorheben})=>{if(!PRODUCTS[produkt]||!COUNTRIES[land]) return {fehler:'Produkt oder Land unbekannt'}; showIncoTable(produkt,menge||10,land,hervorheben||[]); return Object.fromEntries(TERMS.map(x=>{const r=incoCalc(produkt,menge||10,land,x);return [x,{gesamt_netto:r.total,kostenposten:r.lines}];}));}},
   {name:'an_mitarbeiter_uebergeben',description:'Übergibt an einen menschlichen Mitarbeiter (Ticket).',
    inputSchema:{type:'object',properties:{zusammenfassung:{type:'string'},prioritaet:{type:'string',enum:['normal','hoch']}},required:['zusammenfassung']},
    execute:({zusammenfassung,prioritaet})=>({ticket:handoff(zusammenfassung,prioritaet),info:KB.kontakt})}
@@ -726,14 +1006,14 @@ const TOOLS=[
 // ---------------- Regelbasierter Modus (ohne KI) ----------------
 function fallback(text){
   const t=text.toLowerCase(), L=T();
-  const id=(text.match(/GT24-\d{5}/i)||[])[0]?.toUpperCase();
+  const id=extractOrderId(text);
   const mail=(text.match(/[\w.+-]+@[\w.-]+\.\w+/)||[])[0];
   let oid=id||null; if(id) lastId=id; if(!oid&&mail&&lastId) oid=lastId;
-  const tClean=t.replace(/gt24-\d+/g,' ').replace(/\S+@\S+/g,' ');
+  const tClean=t.replace(/\S+@\S+/g,' ').split((id||'§§').toLowerCase()).join(' ');
   const pid=findProduct(tClean);
   const wantsInvoice=/rechnung|invoice|facture|factura|factuur/.test(t)&&!/auf rechnung|kauf auf/.test(t);
   const wantsQuote=/angebot|offer|quote|devis|presupuesto|cotizaci|offerte/.test(t);
-  const qtyM=tClean.replace(/12-in-1|probook 14( air)?|viewmax 27( usb-c)?/g,' ').match(/(\d{1,4})/); const qty=qtyM?parseInt(qtyM[1],10):null;
+  const qtyM=tClean.replace(/12-in-1|probook 14( air)?|viewmax 27( usb-c)?|incoterms?®? ?2020|\d[\d.,]*\s?(€|eur|euro)/g,' ').match(/(\d{1,4})/); const qty=qtyM?parseInt(qtyM[1],10):null;
 
   if(/mitarbeiter|mensch|agent|beschwer|conseiller|humain|human|someone|employee|reclam|queja|medewerker|persoonlijk|hablar con/.test(t)){handoff('„'+text+'“');pendingQuote=null;return L.handoff;}
 
@@ -746,18 +1026,20 @@ function fallback(text){
     if(oid) return L.askEmail;
     return L.askInvoice;
   }
+  // Incoterms, Mengenrabatte
+  {const ia=incoHandler(text,t,tClean,pid,qty,wantsQuote); if(ia) return ia;}
   // Angebot
   if(wantsQuote||(pendingQuote&&qty&&!oid)){
     const p2=pid||pendingQuote||(wantsQuote?lastProduct:null);
     if(!p2){pendingQuote=null; return L.askQuoteProduct;}
     if(!qty){pendingQuote=p2; return L.askQty(PRODUCTS[p2].name);}
-    pendingQuote=null; lastProduct=p2; makeQuote(p2,qty,findCountry(tClean)||'DE'); return L.quoteDone(qty,PRODUCTS[p2].name);
+    pendingQuote=null; const term=lastTerm||'DAP'; const r=makeQuote(p2,qty,findCountry(tClean)||lastCountry||'DE',term); return K().quoteDone(qty,PRODUCTS[p2].name,term,r.d);
   }
   // Bestellung / Sendung
   if(oid&&mail){const r=checkOrder(oid,mail); if(r.err) return L[r.err];
     const o=r.o; showShipment(r.id,o); const neu=carrierInquiry(r.id);
     return L.found(L.st[o.st],etaText(o).replace(/\.$/,''),o.st==='delivered',!!o.warn)+(neu?' '+L.carrierAsk(o.dienst,!!o.warehouse):'');}
-  if(id) return ORDERS[id]?L.askEmail:L.notFound;
+  if(id) return L.askEmail;
   if(/bestell|paket|sendung|wo ist|where is|my order|tracking|commande|colis|où est|pedido|paquete|dónde está|donde esta|bestelling|pakket|waar is/.test(t)&&!pid) return L.askBoth;
   // Produkt
   const shipWord=/versand|shipping|livraison|envío|envio|verzend|zoll|douane|customs|aduana/.test(t);
@@ -783,7 +1065,7 @@ function fallback(text){
 
 // ---------------- Begrüßung ----------------
 function greet(){
-  session++; history=[];verified=new Set();asked=new Set();lastId=null;lastProduct=null;pendingQuote=null;pendingInvoice=false;lang='de';log.innerHTML='';
+  session++; history=[];verified=new Set();asked=new Set();lastId=null;lastProduct=null;pendingQuote=null;pendingInvoice=false;lastQty=null;lastCountry=null;lastTerm=null;pendingInco=null;lang='de';log.innerHTML='';
   {const lg=document.getElementById('lang');if(lg)lg.textContent='–';} presence.textContent='online';
   log.appendChild(el('div','day','Heute'));
   noticeEl=el('p','notice',noticeText()); log.appendChild(noticeEl);
